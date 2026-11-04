@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transformation Game – Storyline aus AHA-Erlebnissen</title>
+<style>
+  :root{
+    --bg:#f6f3ee;
+    --ink:#1d2939;
+    --muted:#667085;
+    --line:#d0d5dd;
+    --orange:#f79009;
+    --green:#12b76a;
+    --blue:#2e90fa;
+    --purple:#7a5af8;
+    --red:#f04438;
+    --yellow:#fdb022;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#f8f4ec 0%,#eef5f2 100%);color:var(--ink)}
+  header{padding:48px 7vw 34px;background:#182230;color:white;position:relative;overflow:hidden}
+  header:after{content:"";position:absolute;right:-80px;top:-80px;width:360px;height:360px;border-radius:50%;background:rgba(18,183,106,.18)}
+  h1{font-size:42px;line-height:1.08;margin:0 0 16px;max-width:1050px}
+  .subtitle{font-size:19px;line-height:1.5;color:#d0d5dd;max-width:900px}
+  main{padding:38px 7vw 70px}
+  .section{margin:0 auto 42px;max-width:1260px}
+  .lead{font-size:21px;line-height:1.55;background:white;border-left:8px solid var(--green);padding:24px 28px;border-radius:18px;box-shadow:0 16px 40px rgba(16,24,40,.08)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .concept{background:var(--card);border-radius:20px;padding:22px;box-shadow:0 12px 30px rgba(16,24,40,.08);border:1px solid rgba(208,213,221,.7)}
+  .concept h3{margin:0 0 8px;font-size:19px}
+  .concept p{margin:0;color:var(--muted);line-height:1.45}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:12px;color:#344054}
+  .dot{width:12px;height:12px;border-radius:99px;background:var(--orange)}
+  .timeline{position:relative;margin-top:28px}
+  .timeline:before{content:"";position:absolute;left:28px;top:16px;bottom:16px;width:4px;background:linear-gradient(var(--green),var(--orange),var(--red),var(--purple),var(--blue));border-radius:99px}
+  .phase{display:grid;grid-template-columns:74px 1fr;gap:18px;margin:20px 0;position:relative}
+  .num{width:60px;height:60px;border-radius:18px;background:white;border:3px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;z-index:2;box-shadow:0 10px 24px rgba(16,24,40,.10)}
+  .phase-card{background:white;border-radius:24px;padding:24px 26px;box-shadow:0 14px 34px rgba(16,24,40,.08);border:1px solid rgba(208,213,221,.7)}
+  .phase-card h2{margin:0 0 6px;font-size:25px}
+  .phase-card .question{margin:0 0 18px;color:var(--muted);font-size:16px}
+  .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .box{border-radius:16px;padding:16px;border:1px solid #eaecf0;background:#fcfcfd;min-height:128px}
+  .box strong{display:block;margin-bottom:8px;font-size:15px;color:#344054}
+  .box ul{margin:0;padding-left:18px;color:#475467;line-height:1.45}
+  .box.aha{background:#fff7ed;border-color:#fedf89}
+  .box.loop{background:#f0f9ff;border-color:#b9e6fe}
+  .tagrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+  .tag{font-size:12px;font-weight:700;background:#eef4ff;color:#3538cd;border-radius:999px;padding:7px 10px}
+  .variant-wrap{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .variant{background:white;border-radius:24px;padding:24px;border:1px solid rgba(208,213,221,.7);box-shadow:0 14px 34px rgba(16,24,40,.08)}
+  .variant h3{margin:0 0 10px;font-size:23px}
+  .variant ol{margin:0;padding-left:20px;color:#475467;line-height:1.55}
+  .cld-map{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+  .node{background:white;border-radius:18px;padding:16px;min-height:130px;border-top:7px solid var(--green);box-shadow:0 10px 24px rgba(16,24,40,.07)}
+  .node:nth-child(2){border-top-color:var(--orange)}.node:nth-child(3){border-top-color:var(--blue)}.node:nth-child(4){border-top-color:var(--purple)}.node:nth-child(5){border-top-color:var(--red)}
+  .node h4{margin:0 0 8px}.node p{margin:0;color:var(--muted);line-height:1.4;font-size:14px}
+  .ending{background:#101828;color:white;border-radius:28px;padding:32px;box-shadow:0 18px 44px rgba(16,24,40,.18)}
+  .ending h2{margin-top:0}.ending p{font-size:19px;line-height:1.55;color:#eaecf0}
+  @media(max-width:980px){.grid,.cols,.variant-wrap,.cld-map{grid-template-columns:1fr}.phase{grid-template-columns:54px 1fr}.timeline:before{left:22px}.num{width:48px;height:48px;font-size:18px}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Transformation Game: Storylines aus den AHA-Erlebnissen</h1>
+  <div class="subtitle">Ein visueller Entwurf, wie die Erkenntnisse aus dem Projekt in eine spielbare Circular-Economy-Transformation übersetzt werden können.</div>
+</header>
+<main>
+  <section class="section">
+    <div class="lead"><strong>Kernidee:</strong> Die AHA-Erlebnisse werden nicht als reine Informationskarten gespielt. Sie erscheinen als Konsequenzen von Entscheidungen. Die Teilnehmenden führen ein Industrieunternehmen durch eine Circular-Economy-Transformation und erleben, wie sich Geschäftsmodell, Produktdesign, Kunden, Supply Chain, Organisation und Messsystem gegenseitig beeinflussen.</div>
+  </section>
+
+  <section class="section grid">
+    <div class="concept"><div class="badge"><span class="dot"></span>Entscheidung</div><h3>Was priorisieren wir?</h3><p>Die Spieler wählen Massnahmen wie Refurbishment, PaaS, Modularisierung, Rücknahmeprozesse oder KPI-Systeme.</p></div>
+    <div class="concept"><div class="badge"><span class="dot" style="background:var(--blue)"></span>Systemeffekt</div><h3>Was verändert sich im CLD?</h3><p>Jede Entscheidung aktiviert positive und negative Rückkopplungen im Causal Loop Diagram.</p></div>
+    <div class="concept"><div class="badge"><span class="dot" style="background:var(--green)"></span>AHA</div><h3>Was lernen wir?</h3><p>Die AHA-Erkenntnis entsteht aus der Differenz zwischen erwarteter Wirkung und tatsächlicher Systemdynamik.</p></div>
+  </section>
+
+  <section class="section">
+    <h2>Hauptstoryline: Vom Pilot zur Transformation</h2>
+    <div class="timeline">
+      <div class="phase"><div class="num">1</div><div class="phase-card"><h2>Die Vision</h2><p class="question">Das Unternehmen will kreislauffähiger werden. Die Geschäftsleitung sucht den ersten Hebel.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>CE-Ziel definieren</li><li>Fokus auf Recycling, Reuse oder Service setzen</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>CE verändert die Kriterien für gute Entscheidungen</li><li>Es braucht einen CBM-Plan</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Strategischer Fokus → Ressourcenallokation</li><li>Ressourcen → Umsetzungsfähigkeit</li></ul></div></div><div class="tagrow"><span class="tag">Strategie</span><span class="tag">Entscheidungslogik</span><span class="tag">Management Support</span></div></div></div>
+      <div class="phase"><div class="num">2</div><div class="phase-card"><h2>Die erste Ernüchterung</h2><p class="question">Das Team merkt: Circular Economy ist nicht einfach Recycling.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Recycling optimieren</li><li>Repair/Refurbishment testen</li><li>PaaS andenken</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Recycling ist besser als nichts, aber oft nicht der stärkste Hebel</li><li>Am Ende muss es sich finanziell lohnen</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Höhere R-Strategien → Circularity ↑</li><li>Komplexität und Investitionen ↑</li></ul></div></div><div class="tagrow"><span class="tag">R-Strategien</span><span class="tag">Business Case</span><span class="tag">Trade-off</span></div></div></div>
+      <div class="phase"><div class="num">3</div><div class="phase-card"><h2>Die Organisationskrise</h2><p class="question">Das Unternehmen stellt fest, dass die Transformation nicht in einer Abteilung gelöst werden kann.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Nur Technikteam arbeiten lassen</li><li>Cross-funktionales Transformationsteam bilden</li><li>Externe Partner einbinden</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Ich muss nicht alles selbst machen</li><li>SC, Kunden und Gesellschaft verstehen uns nicht automatisch</li><li>Buy-in ist zentral</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Integration → Transformationsfähigkeit ↑</li><li>Fehlende Rollen → Verzögerung ↑</li></ul></div></div><div class="tagrow"><span class="tag">Organisation</span><span class="tag">Buy-in</span><span class="tag">Partner</span></div></div></div>
+      <div class="phase"><div class="num">4</div><div class="phase-card"><h2>Der Kundenschock</h2><p class="question">Das zirkuläre Angebot ist da – aber der Markt reagiert anders als erwartet.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Refurbished Produkt lancieren</li><li>Serviceangebot ausbauen</li><li>Kundenkommunikation investieren</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Kunden fragen weiterhin nach neuen Maschinen</li><li>Kunden müssen mitgenommen werden</li><li>Zirkularität impliziert Serviceorientierung</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Kundennutzen sichtbar → Akzeptanz ↑</li><li>Unklare Value Proposition → Nachfrage ↓</li></ul></div></div><div class="tagrow"><span class="tag">Kundennutzen</span><span class="tag">Service</span><span class="tag">Adoption</span></div></div></div>
+      <div class="phase"><div class="num">5</div><div class="phase-card"><h2>Der Supply-Chain-Schock</h2><p class="question">Der Kreislauf steht und fällt mit Rückläufen, Qualität, Volumen und Triage.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Rücknahmeprozess aufbauen</li><li>Partner für Rückführung integrieren</li><li>Triage-Regeln definieren</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Returns ermöglichen erst Zirkularität</li><li>Qualität und Volumen sind kritisch</li><li>Maschine ≠ Komponente</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Rücklaufvolumen → Refurbishment-Potenzial</li><li>Schlechte Qualität → Kosten ↑</li></ul></div></div><div class="tagrow"><span class="tag">Reverse Supply Chain</span><span class="tag">Qualität</span><span class="tag">Triage</span></div></div></div>
+      <div class="phase"><div class="num">6</div><div class="phase-card"><h2>Die Produkttransformation</h2><p class="question">Die Firma erkennt, dass viele Probleme schon im Design angelegt sind.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Modularisierung priorisieren</li><li>Reparierbarkeit erhöhen</li><li>Upgradefähigkeit entwickeln</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Langlebigkeit, Reparierbarkeit und Upgradability entstehen durch Modularität</li><li>Produktions- und Effizienzlogik verändert sich</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Modularität → Lebensdauer ↑</li><li>Modularität → Entwicklungsaufwand ↑</li></ul></div></div><div class="tagrow"><span class="tag">Produktdesign</span><span class="tag">Modularität</span><span class="tag">Langlebigkeit</span></div></div></div>
+      <div class="phase"><div class="num">7</div><div class="phase-card"><h2>Die Skalierungsfrage</h2><p class="question">Der Pilot funktioniert. Jetzt geht es um Skalierung, Ressourcen und Real Cases.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>Pilot klein halten</li><li>Real Case mit Schlüsselkunden entwickeln</li><li>Skalierungsinvestition freigeben</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Real Cases pushen Pilotprojekte</li><li>Transformation muss handhabbar bleiben</li><li>Es muss sich am Ende lohnen</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Referenzcases → internes Buy-in ↑</li><li>Skalierung → Komplexität ↑</li></ul></div></div><div class="tagrow"><span class="tag">Pilot</span><span class="tag">Skalierung</span><span class="tag">Ressourcen</span></div></div></div>
+      <div class="phase"><div class="num">8</div><div class="phase-card"><h2>Die Reifephase</h2><p class="question">Die Organisation muss zeigen, ob die Transformation tatsächlich Wirkung erzeugt.</p><div class="cols"><div class="box"><strong>Spielentscheidung</strong><ul><li>KPI-System einführen</li><li>Nur finanzielle Kennzahlen nutzen</li><li>Circularity, CO₂ und Serviceindikatoren kombinieren</li></ul></div><div class="box aha"><strong>AHA-Erlebnis</strong><ul><li>Zirkularität messen ist nicht straightforward</li><li>Messbarkeit bleibt schwierig, aber notwendig</li></ul></div><div class="box loop"><strong>CLD-Logik</strong><ul><li>Messbarkeit → Steuerungsfähigkeit ↑</li><li>Fehlende Evidenz → Management Support ↓</li></ul></div></div><div class="tagrow"><span class="tag">Measurement</span><span class="tag">Governance</span><span class="tag">Legitimation</span></div></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Alternative Storyline-Varianten</h2>
+    <div class="variant-wrap">
+      <div class="variant"><h3>Variante A: Vom Produkt zum Service</h3><ol><li>Start mit langlebigem Produktdesign</li><li>Einführung von Reparatur und Refurbishment</li><li>Kundenschock: Nachfrage nach Neumaschinen bleibt</li><li>Serviceorientierung und PaaS werden zentral</li><li>Rückführung, Triage und Messung bestimmen die Skalierung</li></ol></div>
+      <div class="variant"><h3>Variante B: Vom Pilot zum Ökosystem</h3><ol><li>Start mit isoliertem Pilotprojekt</li><li>Interne Rollen und Buy-in fehlen</li><li>Partner, Rückläufe und Kunden müssen integriert werden</li><li>Real Cases schaffen Legitimation</li><li>Das Unternehmen erkennt CE als Ökosystem-Transformation</li></ol></div>
+      <div class="variant"><h3>Variante C: Vom Recycling zur höheren R-Strategie</h3><ol><li>Start mit Recycling als vermeintlich naheliegender Lösung</li><li>Erkenntnis: höhere R-Strategien sind wirkungsvoller</li><li>Neue Anforderungen an Produktdesign und Supply Chain entstehen</li><li>Finanzielle Tragfähigkeit wird zum Engpass</li><li>CE wird als strategischer Umbau verstanden</li></ol></div>
+      <div class="variant"><h3>Variante D: Vom Business Case zur Transformation</h3><ol><li>Start mit finanzieller Zielsetzung</li><li>Investitionen und Komplexität steigen</li><li>Ohne Kundenakzeptanz und Rückläufe scheitert der Case</li><li>Management Support und Messbarkeit werden entscheidend</li><li>Die Logik der Entscheidungsbewertung verändert sich</li></ol></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Mapping auf CLD-Bereiche</h2>
+    <div class="cld-map">
+      <div class="node"><h4>Geschäftsmodell</h4><p>CBM, PaaS, finanzielle Tragfähigkeit, Serviceorientierung.</p></div>
+      <div class="node"><h4>Kunden & Markt</h4><p>Kundennutzen, Akzeptanz, Kommunikationsbedarf, Nachfrage nach Neumaschinen.</p></div>
+      <div class="node"><h4>Supply Chain</h4><p>Rückläufe, Qualität, Volumen, Triage, Partnerintegration.</p></div>
+      <div class="node"><h4>Produktdesign</h4><p>Modularisierung, Reparierbarkeit, Langlebigkeit, Upgradefähigkeit.</p></div>
+      <div class="node"><h4>Organisation</h4><p>Management Support, Buy-in, Rollen, Messbarkeit, Transformationsfähigkeit.</p></div>
+    </div>
+  </section>
+
+  <section class="section ending">
+    <h2>Zentrale Botschaft des Spiels</h2>
+    <p>Circular Economy ist kein reines Recycling-, Produkt- oder Supply-Chain-Projekt. Sie ist eine unternehmensweite Transformation, bei der Entscheidungen in einem Bereich unerwartete Wirkungen in anderen Bereichen auslösen. Genau diese Rückkopplungen erzeugen die AHA-Erlebnisse.</p>
+  </section>
+</main>
+</body>
+</html>

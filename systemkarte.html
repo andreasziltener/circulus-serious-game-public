@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Circulus Systemkarte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: App über die volle Höhe – Kopfzeile, Kapitel-Leiste, darunter Diagramm (links) und Detailspalte (rechts). */
+:root {
+  --bg: #F3F5F4; --surface: #FFFFFF; --fg: #17232A; --muted: #5B6B72; --line: #D3DBDD; --line-strong: #8E9DA3;
+  --band-soc: #E6F0E1; --band-org: #ECE7F4; --band-eco: #E3ECF6; --band-circ: #E0EEEC; --band-env: #F6EBDD;
+  --band-ink: #4A5A61;
+  --plus: #3F4E57; --minus: #C23B1C; --prereq: #7650C9;
+  --lever: #F7CF4A; --lever-edge: #A88200; --lever-ink: #1E1A0A;
+  --event-bg: #FBE4DC;
+  --accent: #0B7A88; --accent-soft: rgba(11,122,136,.16);
+  --loop-r: #0B7A88; --loop-b: #B86E00;
+  --font-ui: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-label: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111719; --surface: #1A2327; --fg: #E5ECEE; --muted: #95A5AC; --line: #2C393E; --line-strong: #5E6F76;
+  --band-soc: #18241A; --band-org: #201D2B; --band-eco: #172230; --band-circ: #142625; --band-env: #2A2118;
+  --band-ink: #A5B4BA;
+  --plus: #AEBBC1; --minus: #FF7B5E; --prereq: #B597FF;
+  --lever: #E7C24A; --lever-edge: #8F7210; --lever-ink: #1E1A0A;
+  --event-bg: #3A2019;
+  --accent: #3CC3D3; --accent-soft: rgba(60,195,211,.18);
+  --loop-r: #3CC3D3; --loop-b: #F0A43A;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #111719; --surface: #1A2327; --fg: #E5ECEE; --muted: #95A5AC; --line: #2C393E; --line-strong: #5E6F76;
+  --band-soc: #18241A; --band-org: #201D2B; --band-eco: #172230; --band-circ: #142625; --band-env: #2A2118;
+  --band-ink: #A5B4BA;
+  --plus: #AEBBC1; --minus: #FF7B5E; --prereq: #B597FF;
+  --lever: #E7C24A; --lever-edge: #8F7210; --lever-ink: #1E1A0A;
+  --event-bg: #3A2019;
+  --accent: #3CC3D3; --accent-soft: rgba(60,195,211,.18);
+  --loop-r: #3CC3D3; --loop-b: #F0A43A;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.45; }
+.app { height: 100%; display: flex; flex-direction: column; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; gap: 10px; box-sizing: border-box; }
+button { font: inherit; color: inherit; }
+button:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Kopf */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; }
+.title h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+.title p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 5px 11px; font-size: 12.5px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.ctl-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-right: 6px; }
+
+/* Kapitel-Leiste */
+.chapters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: stretch; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.steps { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.steps button { min-width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 0 9px; }
+.steps button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.steps .step-all { font-family: var(--font-ui); }
+.cap { flex: 1 1 380px; min-width: 0; font-size: 13px; }
+.cap b { font-weight: 600; }
+.cap .q { color: var(--muted); }
+.cap .aha { margin-top: 2px; }
+.cap .meta { margin-top: 2px; color: var(--muted); font-size: 12px; }
+
+/* Hauptbereich */
+.main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 10px; }
+.stage { position: relative; min-width: 0; min-height: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stage svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; }
+.stage svg.dragging { cursor: grabbing; }
+.zoom { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 4px; }
+.zoom button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 16px; line-height: 1; display: grid; place-items: center; }
+.zoom button.wide { width: auto; padding: 0 10px; font-size: 12.5px; }
+.hint { position: absolute; right: 12px; bottom: 12px; font-size: 11.5px; color: var(--muted); background: var(--surface); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); }
+
+.side { min-width: 0; min-height: 0; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.side h2 { font-size: 15px; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+.side h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+.side p { margin: 0 0 8px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+.stat .n { font-family: var(--font-mono); font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 11px; color: var(--muted); }
+.stat .sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+.legend { display: grid; grid-template-columns: 46px 1fr; gap: 7px 10px; align-items: center; font-size: 12.5px; }
+.legend svg { display: block; }
+.note { font-size: 12px; color: var(--muted); }
+.loops { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.loops button { width: 100%; text-align: left; border: 1px solid transparent; background: none; padding: 6px 8px; border-radius: 7px; cursor: pointer; display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: start; }
+.loops button:hover { background: var(--bg); }
+.loops button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.loops button:disabled { opacity: .45; cursor: default; }
+.loops .nm { font-size: 13px; font-weight: 500; }
+.loops .chain { display: block; font-size: 11.5px; color: var(--muted); font-weight: 400; }
+.loops .len { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.lt { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--surface); }
+.lt.R { background: var(--loop-r); } .lt.B { background: var(--loop-b); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 8px; }
+.chip { font-size: 11.5px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--muted); }
+.chip.st-Neu { border-color: var(--accent); color: var(--accent); }
+.chip.st-Geändert, .chip.st-Umbenannt { border-color: var(--prereq); color: var(--prereq); }
+.chip.st-Entfernen { border-color: var(--minus); color: var(--minus); }
+.rel { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rel li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+.pol { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-family: var(--font-mono); font-weight: 500; border: 1.5px solid currentColor; }
+.pol.p { color: var(--plus); } .pol.m { color: var(--minus); } .pol.v { color: var(--prereq); border-style: dashed; }
+.rel .who { background: none; border: 0; padding: 0; font-weight: 500; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+.rel .d { font-size: 12px; color: var(--muted); }
+.rel .r { font-size: 12px; margin-top: 2px; }
+.back { border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 3px 10px; font-size: 12.5px; cursor: pointer; margin-bottom: 10px; }
+.chainlist { font-size: 13px; line-height: 1.9; }
+.chainlist .s { font-family: var(--font-mono); padding: 0 4px; }
+.chainlist .s.m { color: var(--minus); } .chainlist .s.p { color: var(--plus); }
+
+/* SVG */
+.band-label { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; fill: var(--band-ink); }
+.band-sub { font-family: var(--font-ui); font-size: 12px; fill: var(--band-ink); opacity: .85; }
+.edge { fill: none; stroke-width: 1.25; opacity: .78; transition: opacity .15s; }
+.edge.p { stroke: var(--plus); } .edge.m { stroke: var(--minus); } .edge.v { stroke: var(--prereq); stroke-dasharray: 2 4; stroke-width: 1.6; }
+.edge.new { stroke-dasharray: 6 4; }
+svg.focus .edge.hot { opacity: 1; }
+.edge.gone { stroke-dasharray: 2 3; opacity: .55; }
+.edge.old { opacity: .38; }
+.plab { font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.plab.p { fill: var(--plus); } .plab.m { fill: var(--minus); } .plab.v { display: none; }
+.node { cursor: pointer; }
+.node rect.box { stroke-width: 1.1; }
+.node.t-ind rect.box { fill: var(--surface); stroke: var(--line-strong); }
+.node.t-stock rect.box { fill: var(--surface); stroke: var(--fg); stroke-width: 1.9; }
+.node.t-lever rect.box { fill: var(--lever); stroke: var(--lever-edge); stroke-width: 1.4; }
+.node.t-lever.cbm rect.box { stroke: var(--prereq); stroke-width: 2.4; }
+.node.t-event rect.box { fill: var(--event-bg); stroke: var(--minus); stroke-width: 1.5; }
+.node.s-new rect.box { stroke-dasharray: 5 3; }
+.node text { font-family: var(--font-label); font-size: 12.5px; font-weight: 500; fill: var(--fg); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.node.t-lever text { fill: var(--lever-ink); }
+.node text.k { font-family: var(--font-mono); font-size: 9px; font-weight: 500; fill: var(--muted); text-anchor: end; }
+.node.t-lever text.k { fill: var(--lever-ink); opacity: .6; }
+.node rect.halo { fill: none; stroke: var(--accent); stroke-width: 3.5; opacity: 0; }
+.node.fresh rect.halo { opacity: .55; }
+.node:hover rect.box { filter: brightness(.97); }
+.node.sel rect.halo { opacity: 1; }
+svg.focus .edge, svg.focus .plab, svg.focus .node { opacity: .12; }
+svg.focus .edge.hot, svg.focus .plab.hot, svg.focus .node.hot { opacity: 1; }
+svg.focus .edge.hot { stroke-width: 2.4; }
+svg.loopmode .edge.hot.p, svg.loopmode .edge.hot.m { stroke-width: 3; }
+.diff .node.s-new rect.box, .diff .node.s-chg rect.box { stroke: var(--accent); stroke-width: 2.4; }
+.diff .node.s-old { opacity: .55; }
+.diff .edge.new, .diff .edge.chg { stroke: var(--accent); stroke-width: 2; opacity: 1; }
+.diff .edge.keep { opacity: .22; }
+.diff .plab.keep { opacity: .3; }
+.diff .edge.gone { stroke: var(--minus); opacity: .9; stroke-width: 1.8; }
+@media (prefers-reduced-motion: reduce) { .edge { transition: none; } }
+
+@media (max-width: 900px) {
+  .app { height: auto; min-height: 100%; }
+  .main { grid-template-columns: 1fr; }
+  .stage { height: 72vh; }
+  .side { overflow: visible; }
+  .hint { display: none; }
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="title">
+      <h1 data-i18n="h1">Circulus Systemkarte</h1>
+      <p id="meta"></p>
+    </div>
+    <div class="controls">
+      <div><span class="ctl-label" data-i18n="view">Ansicht</span><span class="seg" role="group" id="g-view">
+        <button id="v-draft" data-view="draft" aria-pressed="true" data-i18n="draft">Entwurf</button><button id="v-orig" data-view="orig" aria-pressed="false" data-i18n="orig">Original CLD v4</button><button id="v-diff" data-view="diff" aria-pressed="false" data-i18n="diff">Änderungen</button>
+      </span></div>
+      <div><span class="ctl-label" data-i18n="lang">Sprache</span><span class="seg" role="group" id="g-lang">
+        <button id="l-de" data-lang="de" aria-pressed="true">DE</button><button id="l-en" data-lang="en" aria-pressed="false">EN</button>
+      </span></div>
+    </div>
+  </header>
+
+  <section class="chapters" id="chapters">
+    <div class="steps" id="steps"></div>
+    <div class="cap" id="cap" aria-live="polite"></div>
+  </section>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <svg id="svg" role="img"></svg>
+      <div class="zoom">
+        <button id="z-in">+</button>
+        <button id="z-out">−</button>
+        <button id="z-fit" class="wide" data-i18n="fit">Einpassen</button>
+        <button id="z-full" class="wide" data-i18n="full">Vollbild</button>
+      </div>
+      <div class="hint" data-i18n="hint"></div>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+</div>
+
+<script>
+const DATA = {"generated":"2026-11-03","width":2000,"height":1460,"bands":[{"label":"Sozial","sub":"Mitarbeitende","key":"soc","y0":30,"y1":240,"label_en":"Social","sub_en":"Employees"},{"label":"Organisation","sub":"Steuerung & Fähigkeiten","key":"org","y0":240,"y1":480,"label_en":"Organisation","sub_en":"Governance & capabilities"},{"label":"Wirtschaft","sub":"Markt & Finanzen","key":"eco","y0":480,"y1":840,"label_en":"Economy","sub_en":"Market & finance"},{"label":"Wirtschaft","sub":"Zirkuläre Wertschöpfung","key":"circ","y0":840,"y1":1190,"label_en":"Economy","sub_en":"Circular value creation"},{"label":"Ökologie","sub":"Produkt & Umwelt","key":"env","y0":1190,"y1":1450,"label_en":"Ecology","sub_en":"Product & environment"}],"nodes":[{"id":"Marketing","en":"Marketing","de":"Marketing & Kundenkommunikation","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":1,"comment":"Deckt auch 'Kundenkommunikation investieren' aus Kap. 4 ab.","comment_en":"Also covers 'invest in customer communication' from ch. 4.","x":550,"y":778},{"id":"Price","en":"Price","de":"Preis","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":1310,"y":672},{"id":"Customer Expectations","en":"Customer Expectations","de":"Kundenerwartungen (Nachhaltigkeit)","area":"Wirtschaft","type":"Indikator","status":"Geändert","chapter":1,"comment":"War exogen; wird neu durch Regulatory Pressure beeinflusst. Bedeutung klären: Erwartung oder Erfüllungsgrad?","comment_en":"Was exogenous; now driven by Regulatory Pressure. To clarify: expectation or degree of fulfilment?","x":450,"y":566},{"id":"Purchase Decision","en":"Purchase Decision","de":"Kaufentscheidung Neumaschinen","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":1,"comment":"Führt neu über Sales zum Umsatz (vorher direkt).","comment_en":"Now leads to revenue via Sales (previously directly).","x":440,"y":672},{"id":"Sales","en":"Sales","de":"Absatz Neumaschinen","area":"Wirtschaft","type":"Indikator","status":"Geändert","chapter":1,"comment":"War Hebel; ist Ergebnis der Kaufentscheidung, nicht direkt steuerbar.","comment_en":"Was a lever; is the result of the purchase decision, not directly controllable.","x":960,"y":672},{"id":"Production Volume","en":"Production Volume","de":"Produktionsvolumen","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":1100,"y":778},{"id":"Revenue","en":"Revenue","de":"Umsatz","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":1190,"y":566},{"id":"Costs","en":"Costs","de":"Kosten","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":1600,"y":778},{"id":"Logistics Costs","en":"Logistics Costs","de":"Logistikkosten","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":1390,"y":778},{"id":"Cashflow","en":"Cashflow","de":"Cashflow / Liquidität","area":"Wirtschaft","type":"Zustand","status":"Bestehend","chapter":1,"comment":"Für die Simulation als Bestand 'Liquidität' führen, Cashflow ist der Zufluss.","comment_en":"In the simulation, model as a stock 'liquidity'; cashflow is the inflow.","x":1390,"y":566},{"id":"Investment in Circularity","en":"Investment in Circularity","de":"Investition in Zirkularität","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":1,"comment":"Spieler:in legt Budgetanteil fest; begrenzt durch Cashflow und Management Support.","comment_en":"Player sets the budget share; limited by cashflow and management support.","x":1730,"y":672},{"id":"Customer Trust","en":"Customer Trust","de":"Kundenvertrauen","area":"Wirtschaft","type":"Zustand","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":190,"y":566},{"id":"Installed Base","en":"Installed Base","de":"Installierte Basis","area":"Wirtschaft","type":"Zustand","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":640,"y":672},{"id":"Circular Market Volume","en":"Circular Market Volume","de":"Zirkuläres Marktvolumen","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":2,"comment":"","comment_en":"","x":710,"y":566},{"id":"Service Quality","en":"Service Quality","de":"Servicequalität","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":4,"comment":"","comment_en":"","x":100,"y":672},{"id":"Connectivity of the Product","en":"Connectivity of the Product","de":"Konnektivität des Produkts","area":"Wirtschaft","type":"Zustand","status":"Bestehend","chapter":5,"comment":"","comment_en":"","x":1830,"y":1134},{"id":"Product Condition Analysis","en":"Product Condition Analysis","de":"Zustandsanalyse","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":5,"comment":"","comment_en":"","x":1560,"y":1028},{"id":"Triage of Circular Components","en":"Triage of Circular Components","de":"Triage zirkulärer Komponenten","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":5,"comment":"","comment_en":"","x":1900,"y":1028},{"id":"Reverse Logistic","en":"Reverse Logistic","de":"Rücklogistik","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":5,"comment":"","comment_en":"","x":930,"y":1028},{"id":"Reimbursement Models","en":"Reimbursement Models","de":"Rückvergütungsmodelle","area":"Wirtschaft","type":"Hebel","status":"Geändert","chapter":5,"comment":"War Indikator; neu ein Hebel (Rückkaufanreize), der das Rücklaufvolumen erhöht.","comment_en":"Was an indicator; now a lever (buy-back incentives) that increases return volume.","x":1160,"y":1028},{"id":"Return Volume","en":"Return Volume","de":"Rücklaufvolumen","area":"Wirtschaft","type":"Indikator","status":"Neu","chapter":5,"comment":"Kap. 5: 'Returns ermöglichen erst Zirkularität'.","comment_en":"Ch. 5: 'Returns are what make circularity possible.'","x":1090,"y":922},{"id":"Return Quality","en":"Return Quality","de":"Rücklaufqualität","area":"Wirtschaft","type":"Indikator","status":"Neu","chapter":5,"comment":"Kap. 5: 'Qualität und Volumen sind kritisch'.","comment_en":"Ch. 5: 'Quality and volume are critical.'","x":1900,"y":922},{"id":"Supply Chain Shock","en":"Supply Chain Shock","de":"Supply-Chain-Schock","area":"Wirtschaft","type":"Ereignis","status":"Neu","chapter":5,"comment":"Ereignis Kap. 5, senkt die Rücklaufqualität.","comment_en":"Event in ch. 5, lowers return quality.","x":1400,"y":1134},{"id":"Scouting","en":"Scouting","de":"Scouting","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":5,"comment":"Manuskript Table 6/Fig. 4","comment_en":"Manuscript Table 6/Fig. 4","x":590,"y":1134},{"id":"Refurbishment","en":"Refurbishment","de":"Refurbishment","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":2,"comment":"Manuskript Table 6/Fig. 4","comment_en":"Manuscript Table 6/Fig. 4","x":1090,"y":1134},{"id":"Supplier Collaboration","en":"Supplier Collaboration","de":"Lieferantenzusammenarbeit","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":3,"comment":"Manuskript Table 6/Fig. 4","comment_en":"Manuscript Table 6/Fig. 4","x":320,"y":1028},{"id":"Customer Collaboration","en":"Customer Collaboration","de":"Kundenzusammenarbeit","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":4,"comment":"Manuskript Table 6/Fig. 4","comment_en":"Manuscript Table 6/Fig. 4","x":220,"y":778},{"id":"Coordination of M&C Flows","en":"Coordination of M&C Flows","de":"Koordination Maschinen- & Komponentenflüsse","area":"Wirtschaft","type":"Indikator","status":"Bestehend","chapter":7,"comment":"Manuskript Table 6/Fig. 4","comment_en":"Manuscript Table 6/Fig. 4","x":1290,"y":922},{"id":"Recycling","en":"Recycling","de":"Recycling","area":"Wirtschaft","type":"Hebel","status":"Neu","chapter":2,"comment":"Kap. 2: 'Recycling ist besser als nichts, aber oft nicht der stärkste Hebel'.","comment_en":"Ch. 2: 'Recycling is better than nothing, but often not the strongest lever.'","x":1610,"y":922},{"id":"Customer Acceptance of Circular Offers","en":"Customer Acceptance of Circular Offers","de":"Akzeptanz zirkulärer Angebote","area":"Wirtschaft","type":"Zustand","status":"Neu","chapter":4,"comment":"Kap. 4: 'Kunden müssen mitgenommen werden'.","comment_en":"Ch. 4: 'Customers need to be taken along.'","x":980,"y":566},{"id":"Preference for New Machines","en":"Preference for New Machines","de":"Präferenz für Neumaschinen","area":"Wirtschaft","type":"Ereignis","status":"Neu","chapter":4,"comment":"Ereignis Kap. 4 'Kundenschock'.","comment_en":"Event in ch. 4 'customer shock'.","x":1880,"y":566},{"id":"Development Effort","en":"Development Effort","de":"Entwicklungsaufwand","area":"Wirtschaft","type":"Indikator","status":"Neu","chapter":6,"comment":"Kap. 6: 'Modularität → Entwicklungsaufwand ↑'.","comment_en":"Ch. 6: 'Modularity → development effort ↑'.","x":1890,"y":778},{"id":"Scaling Investment","en":"Scaling Investment","de":"Skalierungsinvestition","area":"Wirtschaft","type":"Hebel","status":"Neu","chapter":7,"comment":"Kap. 7: 'Skalierungsinvestition freigeben'.","comment_en":"Ch. 7: 'Approve scaling investment'.","x":1220,"y":422},{"id":"A Machine Repair","en":"A Machine Repair","de":"A: Maschinenreparatur","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":2,"comment":"CBM-Pfad A (Slowing). Excel: Stage 1.","comment_en":"CBM path A (slowing). Excel: stage 1.","x":240,"y":1134},{"id":"B1 Component Circulation","en":"B1 Component Circulation","de":"B1: Komponentenkreislauf","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":5,"comment":"CBM-Pfad B1. Excel: Stage 1. Kap. 5: 'Maschine ≠ Komponente'.","comment_en":"CBM path B1. Excel: stage 1. Ch. 5: 'Machine ≠ component'.","x":540,"y":922},{"id":"B2 Machine Circulation","en":"B2 Machine Circulation","de":"B2: Maschinenkreislauf","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":5,"comment":"CBM-Pfad B2. Excel: Stage 1.","comment_en":"CBM path B2. Excel: stage 1.","x":560,"y":1028},{"id":"C Combined M&C Flows","en":"C Combined M&C Flows","de":"C: Kombinierte M&K-Flüsse","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":7,"comment":"CBM-Pfad C. Excel: Stage 2. Freigeschaltet durch B1 und B2.","comment_en":"CBM path C. Excel: stage 2. Unlocked by B1 and B2.","x":280,"y":922},{"id":"D Pay-per-use","en":"D Pay-per-use","de":"D: Pay-per-use","area":"Wirtschaft","type":"Hebel","status":"Bestehend","chapter":7,"comment":"CBM-Pfad D. Excel: Stage 3. Freigeschaltet durch C.","comment_en":"CBM path D. Excel: stage 3. Unlocked by C.","x":740,"y":922},{"id":"Strategic CE Focus","en":"Strategic CE Focus","de":"Strategischer CE-Fokus","area":"Organisation","type":"Hebel","status":"Neu","chapter":1,"comment":"Kap. 1: 'CE-Ziel definieren'. Ausprägung z. B. Recycling / Reuse / Service.","comment_en":"Ch. 1: 'Define the CE goal'. Options e.g. recycling / reuse / service.","x":1900,"y":422},{"id":"Management Support","en":"Management Support","de":"Management Support","area":"Organisation","type":"Zustand","status":"Neu","chapter":1,"comment":"Kap. 1 und 8.","comment_en":"Ch. 1 and 8.","x":1860,"y":316},{"id":"Regulatory Pressure","en":"Regulatory Pressure","de":"Regulatorischer Druck","area":"Organisation","type":"Ereignis","status":"Neu","chapter":1,"comment":"Exogener Treiber, z. B. EU-Ökodesign-Verordnung.","comment_en":"Exogenous driver, e.g. EU Ecodesign Regulation.","x":120,"y":316},{"id":"Cross-functional Team","en":"Cross-functional Team","de":"Cross-funktionales Team","area":"Organisation","type":"Hebel","status":"Neu","chapter":3,"comment":"Kap. 3.","comment_en":"Ch. 3.","x":1490,"y":422},{"id":"Partner Integration","en":"Partner Integration","de":"Partnerintegration","area":"Organisation","type":"Hebel","status":"Neu","chapter":3,"comment":"Kap. 3 und 5: 'Ich muss nicht alles selbst machen'.","comment_en":"Ch. 3 and 5: 'I don't have to do everything myself.'","x":420,"y":316},{"id":"Buy-in","en":"Buy-in","de":"Buy-in","area":"Organisation","type":"Zustand","status":"Neu","chapter":3,"comment":"Kap. 3: 'Buy-in ist zentral'.","comment_en":"Ch. 3: 'Buy-in is key.'","x":770,"y":316},{"id":"Transformation Capability","en":"Transformation Capability","de":"Transformationsfähigkeit","area":"Organisation","type":"Zustand","status":"Neu","chapter":3,"comment":"Kap. 3.","comment_en":"Ch. 3.","x":800,"y":422},{"id":"Complexity","en":"Complexity","de":"Komplexität","area":"Organisation","type":"Indikator","status":"Neu","chapter":2,"comment":"Kap. 2 und 7: 'Komplexität ↑'.","comment_en":"Ch. 2 and 7: 'Complexity ↑'.","x":1000,"y":316},{"id":"Real Cases","en":"Real Cases","de":"Referenzfälle","area":"Organisation","type":"Zustand","status":"Neu","chapter":7,"comment":"Kap. 7: 'Real Cases pushen Pilotprojekte'.","comment_en":"Ch. 7: 'Real cases push pilot projects.'","x":510,"y":422},{"id":"KPI System","en":"KPI System","de":"KPI-System","area":"Organisation","type":"Hebel","status":"Neu","chapter":8,"comment":"Kap. 8. Ausprägung: nur finanziell / kombiniert mit Circularity, CO2, Service.","comment_en":"Ch. 8. Options: financial only / combined with circularity, CO2, service.","x":1360,"y":316},{"id":"Measurability","en":"Measurability","de":"Messbarkeit","area":"Organisation","type":"Indikator","status":"Neu","chapter":8,"comment":"Kap. 8.","comment_en":"Ch. 8.","x":1570,"y":316},{"id":"Meaningfulness of Work","en":"Meaningfulness of Work","de":"Sinnhaftigkeit der Arbeit","area":"Sozial","type":"Hebel","status":"Bestehend","chapter":3,"comment":"Herzberg (Motivator). Neu zusätzlich durch MCI beeinflusst.","comment_en":"Herzberg (motivator). Now also influenced by MCI.","x":1820,"y":186},{"id":"Job Certainty","en":"Job Certainty","de":"Arbeitsplatzsicherheit","area":"Sozial","type":"Hebel","status":"Bestehend","chapter":3,"comment":"","comment_en":"","x":820,"y":88},{"id":"Company Rules and Policy","en":"Company Rules and Policy","de":"Regeln & Richtlinien","area":"Sozial","type":"Hebel","status":"Bestehend","chapter":3,"comment":"Herzberg (Hygienefaktor).","comment_en":"Herzberg (hygiene factor).","x":460,"y":88},{"id":"Employee Satisfaction","en":"Employee Satisfaction","de":"Mitarbeiterzufriedenheit","area":"Sozial","type":"Zustand","status":"Bestehend","chapter":3,"comment":"","comment_en":"","x":780,"y":186},{"id":"Labor Turnover Rate","en":"Labor Turnover Rate","de":"Fluktuation","area":"Sozial","type":"Indikator","status":"Bestehend","chapter":3,"comment":"","comment_en":"","x":470,"y":186},{"id":"Productivity","en":"Productivity","de":"Produktivität","area":"Sozial","type":"Indikator","status":"Bestehend","chapter":3,"comment":"","comment_en":"","x":1780,"y":88},{"id":"Employer Brand","en":"Employer Brand","de":"Arbeitgebermarke","area":"Sozial","type":"Zustand","status":"Bestehend","chapter":3,"comment":"","comment_en":"","x":130,"y":186},{"id":"Circular Product Design","en":"Circular Product Design","de":"Zirkuläres Produktdesign","area":"Ökologie","type":"Hebel","status":"Bestehend","chapter":6,"comment":"","comment_en":"","x":1360,"y":1284},{"id":"Modularity of the Product","en":"Modularity of the Product","de":"Modularität des Produkts","area":"Ökologie","type":"Zustand","status":"Geändert","chapter":6,"comment":"War Hebel; wird durch Investition und Produktdesign aufgebaut. Bereich von Wirtschaft nach Ökologie verschoben? (offen)","comment_en":"Was a lever; built up through investment and product design. Moved from economy to ecology? (open)","x":120,"y":1284},{"id":"Circularity Compatibility of the Components","en":"Circularity Compatibility of the Components","de":"Zirkuläre Kompatibilität der Komponenten","area":"Ökologie","type":"Zustand","status":"Bestehend","chapter":6,"comment":"","comment_en":"","x":230,"y":1390},{"id":"Product Lifetime","en":"Product Lifetime","de":"Produktlebensdauer","area":"Ökologie","type":"Indikator","status":"Bestehend","chapter":2,"comment":"","comment_en":"","x":330,"y":1284},{"id":"Material Circularity Index %","en":"Material Circularity Index %","de":"Material Circularity Index (MCI)","area":"Ökologie","type":"Indikator","status":"Bestehend","chapter":1,"comment":"Ellen MacArthur Foundation: MCI.","comment_en":"Ellen MacArthur Foundation: MCI.","x":1050,"y":1390},{"id":"Recovered Material Inflow","en":"Recovered Material Inflow","de":"Rückgewonnener Materialzufluss","area":"Ökologie","type":"Indikator","status":"Umbenannt","chapter":2,"comment":"War 'Material Inflow'. Neuer Name vermeidet Verwechslung mit Rohstoffzufuhr.","comment_en":"Was 'Material Inflow'. New name avoids confusion with virgin material input.","x":1030,"y":1284},{"id":"Material Outflow","en":"Material Outflow","de":"Materialabfluss (Abfall)","area":"Ökologie","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":660,"y":1284},{"id":"CO2","en":"CO2","de":"CO2-Emissionen","area":"Ökologie","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":560,"y":1390},{"id":"Water and Energy","en":"Water and Energy","de":"Wasser & Energie","area":"Ökologie","type":"Indikator","status":"Bestehend","chapter":1,"comment":"","comment_en":"","x":830,"y":1390}],"edges":[{"id":"R001","src":"Price","dst":"Revenue","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Bestehend","reason":"","desc":"Higher price increases revenue per sold unit.","desc_de":"Ein höherer Preis erhöht den Umsatz pro verkaufter Einheit.","reason_en":"","source":"","row":2,"chapter":1},{"id":"R002","src":"Costs","dst":"Cashflow","pol":"-","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"","desc":"Higher costs reduce free cashflow.","desc_de":"Höhere Kosten verringern den freien Cashflow.","reason_en":"","source":"","row":3,"chapter":1},{"id":"R003","src":"Marketing","dst":"Purchase Decision","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Geändert","reason":"Ziel war 'Sales'. Marketing wirkt auf den Kaufentscheid; Sales folgt daraus.","desc":"Marketing and customer communication increase the purchase decision.","desc_de":"Marketing und Kundenkommunikation erhöhen die Kaufbereitschaft.","reason_en":"Target was 'Sales'. Marketing acts on the purchase decision; sales follow from it.","source":"","row":4,"chapter":1},{"id":"R004","src":"Sales","dst":"Production Volume","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"Hebel-Markierung entfernt: Sales ist Ergebnis.","desc":"Higher sales require a higher production volume.","desc_de":"Mehr Absatz erfordert ein höheres Produktionsvolumen.","reason_en":"Lever flag removed: sales are an outcome.","source":"","row":5,"chapter":1},{"id":"R005","src":"Customer Expectations","dst":"Purchase Decision","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"Offen: Ist 'Erwartung' oder 'Erfüllung der Erwartung' gemeint?","desc":"Meeting customer expectations increases the purchase decision.","desc_de":"Erfüllte Kundenerwartungen erhöhen die Kaufbereitschaft.","reason_en":"Open: is 'expectation' or 'meeting the expectation' meant?","source":"","row":6,"chapter":1},{"id":"R006","src":"Purchase Decision","dst":"Revenue","pol":"+","art":"Kausal","strength":"","delay":"","status":"Entfernen","reason":"Ersetzt durch Purchase Decision → Sales → Revenue (verbindet die beiden Nachfrage-Stränge).","desc":"More purchase decisions generate more revenue.","desc_de":"Mehr Kaufentscheide erzeugen mehr Umsatz.","reason_en":"Replaced by Purchase Decision → Sales → Revenue (connects the two demand strands).","source":"","row":7,"chapter":1},{"id":"R007","src":"Revenue","dst":"Cashflow","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"","desc":"Higher revenue increases cashflow.","desc_de":"Mehr Umsatz erhöht den Cashflow.","reason_en":"","source":"","row":8,"chapter":1},{"id":"R008","src":"Customer Expectations","dst":"Customer Trust","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Meeting customer expectations builds customer trust.","desc_de":"Erfüllte Kundenerwartungen schaffen Vertrauen.","reason_en":"","source":"","row":9,"chapter":1},{"id":"R009","src":"Cashflow","dst":"Investment in Circularity","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"In der Simulation als Obergrenze (Budget) umsetzen.","desc":"Available cashflow enables investment in circularity.","desc_de":"Verfügbarer Cashflow ermöglicht Investitionen in Zirkularität.","reason_en":"In the simulation, implement as an upper limit (budget).","source":"","row":10,"chapter":1},{"id":"R010","src":"Investment in Circularity","dst":"Modularity of the Product","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Circularity investment increases product modularity.","desc_de":"Investitionen in Zirkularität erhöhen die Modularität des Produkts.","reason_en":"","source":"","row":11,"chapter":6},{"id":"R011","src":"Modularity of the Product","dst":"Service Quality","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Modular products enable higher service quality.","desc_de":"Modulare Produkte ermöglichen besseren Service.","reason_en":"","source":"","row":12,"chapter":6},{"id":"R012","src":"Modularity of the Product","dst":"Circularity Compatibility of the Components","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Bestehend","reason":"","desc":"Modularity improves the circular compatibility of components.","desc_de":"Modularität verbessert die zirkuläre Kompatibilität der Komponenten.","reason_en":"","source":"","row":13,"chapter":6},{"id":"R013","src":"Production Volume","dst":"Logistics Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Bestehend","reason":"","desc":"Higher production volume raises logistics costs.","desc_de":"Ein höheres Produktionsvolumen erhöht die Logistikkosten.","reason_en":"","source":"","row":14,"chapter":1},{"id":"R014","src":"Production Volume","dst":"Costs","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"","desc":"Higher production volume raises total costs.","desc_de":"Ein höheres Produktionsvolumen erhöht die Gesamtkosten.","reason_en":"","source":"","row":15,"chapter":1},{"id":"R015","src":"Service Quality","dst":"Customer Trust","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Higher service quality builds customer trust.","desc_de":"Bessere Servicequalität schafft Kundenvertrauen.","reason_en":"","source":"","row":16,"chapter":4},{"id":"R016","src":"Sales","dst":"Installed Base","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"","desc":"Sales add units to the installed base.","desc_de":"Verkaufte Maschinen vergrössern die installierte Basis.","reason_en":"","source":"","row":17,"chapter":1},{"id":"R017","src":"Connectivity of the Product","dst":"Product Condition Analysis","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Product connectivity enables product condition analysis.","desc_de":"Vernetzte Produkte ermöglichen eine Zustandsanalyse.","reason_en":"","source":"","row":18,"chapter":5},{"id":"R018","src":"Installed Base","dst":"Circular Market Volume","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"A larger installed base grows the circular market volume.","desc_de":"Eine grössere installierte Basis vergrössert den zirkulären Markt.","reason_en":"","source":"","row":19,"chapter":2},{"id":"R019","src":"Product Condition Analysis","dst":"Triage of Circular Components","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Condition analysis enables triage of circular components.","desc_de":"Die Zustandsanalyse ermöglicht die Triage zirkulärer Komponenten.","reason_en":"","source":"","row":20,"chapter":5},{"id":"R020","src":"Triage of Circular Components","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Triage feeds the reverse logistics process.","desc_de":"Die Triage speist die Rücklogistik.","reason_en":"","source":"","row":21,"chapter":5},{"id":"R021","src":"Reverse Logistic","dst":"Reimbursement Models","pol":"+","art":"Kausal","strength":"","delay":"","status":"Entfernen","reason":"Richtung umgekehrt: Rückvergütungen erzeugen Rückläufe (siehe neue Beziehung Reimbursement Models → Return Volume).","desc":"Reverse logistics enables reimbursement / buy-back models.","desc_de":"Rücklogistik ermöglicht Rückvergütungs- und Rückkaufmodelle.","reason_en":"Direction reversed: reimbursements create returns (see new relation Reimbursement Models → Return Volume).","source":"","row":22,"chapter":5},{"id":"R022","src":"Reimbursement Models","dst":"Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Bestehend","reason":"","desc":"Reimbursement models increase costs.","desc_de":"Rückvergütungsmodelle erhöhen die Kosten.","reason_en":"","source":"","row":23,"chapter":5},{"id":"R023","src":"Reverse Logistic","dst":"Recovered Material Inflow","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Geändert","reason":"Nur Umbenennung des Ziels (Material Inflow → Recovered Material Inflow).","desc":"Reverse logistics returns material as inflow.","desc_de":"Die Rücklogistik führt Material als Zufluss zurück.","reason_en":"Target renamed only (Material Inflow → Recovered Material Inflow).","source":"","row":24,"chapter":5},{"id":"R024","src":"Productivity","dst":"Costs","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Higher productivity lowers costs.","desc_de":"Höhere Produktivität senkt die Kosten.","reason_en":"","source":"","row":25,"chapter":3},{"id":"R025","src":"Meaningfulness of Work","dst":"Employee Satisfaction","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Meaningful work increases employee satisfaction (Herzberg motivator).","desc_de":"Sinnvolle Arbeit erhöht die Mitarbeiterzufriedenheit (Herzberg-Motivator).","reason_en":"","source":"Herzberg","row":26,"chapter":3},{"id":"R026","src":"Job Certainty","dst":"Employee Satisfaction","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Job certainty increases employee satisfaction.","desc_de":"Arbeitsplatzsicherheit erhöht die Mitarbeiterzufriedenheit.","reason_en":"","source":"","row":27,"chapter":3},{"id":"R027","src":"Company Rules and Policy","dst":"Employee Satisfaction","pol":"-","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Excessive rules and policy reduce employee satisfaction (Herzberg hygiene).","desc_de":"Übermässige Regeln und Richtlinien senken die Zufriedenheit (Herzberg-Hygienefaktor).","reason_en":"","source":"Herzberg","row":28,"chapter":3},{"id":"R028","src":"Employee Satisfaction","dst":"Labor Turnover Rate","pol":"-","art":"Kausal","strength":"stark","delay":"mittel","status":"Bestehend","reason":"","desc":"Higher satisfaction lowers the labor turnover rate.","desc_de":"Höhere Zufriedenheit senkt die Fluktuation.","reason_en":"","source":"","row":29,"chapter":3},{"id":"R029","src":"Employee Satisfaction","dst":"Productivity","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Higher satisfaction increases productivity.","desc_de":"Höhere Zufriedenheit erhöht die Produktivität.","reason_en":"","source":"","row":30,"chapter":3},{"id":"R030","src":"Employee Satisfaction","dst":"Employer Brand","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Higher satisfaction strengthens the employer brand.","desc_de":"Höhere Zufriedenheit stärkt die Arbeitgebermarke.","reason_en":"","source":"","row":31,"chapter":3},{"id":"R031","src":"Labor Turnover Rate","dst":"Employer Brand","pol":"-","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"High turnover weakens the employer brand.","desc_de":"Hohe Fluktuation schwächt die Arbeitgebermarke.","reason_en":"","source":"","row":32,"chapter":3},{"id":"R032","src":"Material Circularity Index %","dst":"CO2","pol":"-","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"A higher circularity index lowers CO2 emissions.","desc_de":"Ein höherer Circularity Index senkt die CO2-Emissionen.","reason_en":"","source":"","row":33,"chapter":1},{"id":"R033","src":"Material Circularity Index %","dst":"Water and Energy","pol":"-","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"A higher circularity index lowers water and energy use.","desc_de":"Ein höherer Circularity Index senkt den Wasser- und Energieverbrauch.","reason_en":"","source":"","row":34,"chapter":1},{"id":"R034","src":"Circular Product Design","dst":"Material Circularity Index %","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Circular product design raises the material circularity index.","desc_de":"Zirkuläres Produktdesign erhöht den Material Circularity Index.","reason_en":"","source":"","row":35,"chapter":6},{"id":"R035","src":"Product Lifetime","dst":"CO2","pol":"-","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Longer product lifetime lowers CO2 emissions.","desc_de":"Eine längere Lebensdauer senkt die CO2-Emissionen.","reason_en":"","source":"","row":36,"chapter":2},{"id":"R036","src":"Product Lifetime","dst":"Water and Energy","pol":"-","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Longer product lifetime lowers water and energy use.","desc_de":"Eine längere Lebensdauer senkt den Wasser- und Energieverbrauch.","reason_en":"","source":"","row":37,"chapter":2},{"id":"R037","src":"Recovered Material Inflow","dst":"CO2","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Geändert","reason":"Nur Umbenennung der Ursache.","desc":"Reused material inflow avoids the embodied CO2 of virgin material.","desc_de":"Wiederverwendetes Material vermeidet das graue CO2 von Neumaterial.","reason_en":"Cause renamed only.","source":"","row":38,"chapter":2},{"id":"R038","src":"Recovered Material Inflow","dst":"Water and Energy","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Geändert","reason":"Nur Umbenennung der Ursache.","desc":"Reused material inflow avoids the water and energy of virgin material.","desc_de":"Wiederverwendetes Material vermeidet Wasser und Energie für Neumaterial.","reason_en":"Cause renamed only.","source":"","row":39,"chapter":2},{"id":"R039","src":"Modularity of the Product","dst":"Recovered Material Inflow","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Geändert","reason":"Nur Umbenennung des Ziels.","desc":"Modularity increases recoverable material inflow.","desc_de":"Modularität erhöht den rückgewinnbaren Materialzufluss.","reason_en":"Target renamed only.","source":"","row":40,"chapter":6},{"id":"R040","src":"Material Outflow","dst":"CO2","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Material outflow (waste / disposal) increases CO2 emissions.","desc_de":"Materialabfluss (Abfall, Entsorgung) erhöht die CO2-Emissionen.","reason_en":"","source":"","row":41,"chapter":1},{"id":"R041","src":"Material Outflow","dst":"Water and Energy","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Material outflow increases water and energy impact.","desc_de":"Materialabfluss erhöht die Belastung durch Wasser und Energie.","reason_en":"","source":"","row":42,"chapter":1},{"id":"R042","src":"Customer Trust","dst":"Purchase Decision","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Higher customer trust increases the purchase decision.","desc_de":"Mehr Kundenvertrauen erhöht die Kaufbereitschaft.","reason_en":"","source":"","row":43,"chapter":1},{"id":"R043","src":"Logistics Costs","dst":"Costs","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Bestehend","reason":"","desc":"Logistics costs add to total costs.","desc_de":"Logistikkosten erhöhen die Gesamtkosten.","reason_en":"","source":"","row":44,"chapter":1},{"id":"R044","src":"Circular Market Volume","dst":"Revenue","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"A larger circular market volume generates additional (recurring) revenue.","desc_de":"Ein grösserer zirkulärer Markt erzeugt zusätzlichen, wiederkehrenden Umsatz.","reason_en":"","source":"","row":45,"chapter":2},{"id":"R045","src":"Investment in Circularity","dst":"Connectivity of the Product","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Circularity investment funds product connectivity (IoT / sensors).","desc_de":"Investitionen in Zirkularität finanzieren die Vernetzung des Produkts (IoT, Sensoren).","reason_en":"","source":"","row":46,"chapter":5},{"id":"R046","src":"Circularity Compatibility of the Components","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Component compatibility eases return and reverse logistics.","desc_de":"Kompatible Komponenten erleichtern Rücknahme und Rücklogistik.","reason_en":"","source":"","row":47,"chapter":6},{"id":"R047","src":"Recovered Material Inflow","dst":"Material Circularity Index %","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Geändert","reason":"Nur Umbenennung der Ursache.","desc":"Recycled material inflow raises the material circularity index.","desc_de":"Rezyklierter Materialzufluss erhöht den Material Circularity Index.","reason_en":"Cause renamed only.","source":"","row":48,"chapter":2},{"id":"R048","src":"Circular Product Design","dst":"Product Lifetime","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Circular product design extends product lifetime.","desc_de":"Zirkuläres Produktdesign verlängert die Lebensdauer.","reason_en":"","source":"","row":49,"chapter":6},{"id":"R049","src":"Modularity of the Product","dst":"Product Lifetime","pol":"+","art":"Kausal","strength":"stark","delay":"lang","status":"Bestehend","reason":"","desc":"Modularity (repair / upgrade) extends product lifetime.","desc_de":"Modularität (Reparatur, Upgrade) verlängert die Lebensdauer.","reason_en":"","source":"","row":50,"chapter":6},{"id":"R050","src":"Production Volume","dst":"Material Outflow","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Higher production volume increases material outflow.","desc_de":"Ein höheres Produktionsvolumen erhöht den Materialabfluss.","reason_en":"","source":"","row":51,"chapter":1},{"id":"R051","src":"Material Circularity Index %","dst":"Material Outflow","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"A higher circularity index reduces material outflow.","desc_de":"Ein höherer Circularity Index verringert den Materialabfluss.","reason_en":"","source":"","row":52,"chapter":1},{"id":"R052","src":"Service Quality","dst":"Product Lifetime","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Bestehend","reason":"","desc":"Service and maintenance extend product lifetime.","desc_de":"Service und Wartung verlängern die Lebensdauer.","reason_en":"","source":"","row":53,"chapter":4},{"id":"R053","src":"Circularity Compatibility of the Components","dst":"Material Circularity Index %","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Component compatibility raises the material circularity index.","desc_de":"Kompatible Komponenten erhöhen den Material Circularity Index.","reason_en":"","source":"","row":54,"chapter":6},{"id":"R054","src":"Employer Brand","dst":"Customer Trust","pol":"+","art":"Kausal","strength":"schwach","delay":"lang","status":"Bestehend","reason":"","desc":"A strong employer brand boosts customer trust (reputation spillover).","desc_de":"Eine starke Arbeitgebermarke stärkt das Kundenvertrauen (Reputation).","reason_en":"","source":"","row":55,"chapter":3},{"id":"R055","src":"B1 Component Circulation","dst":"C Combined M&C Flows","pol":"+","art":"Voraussetzung","strength":"","delay":"","status":"Geändert","reason":"Art 'Voraussetzung' statt kausal: schaltet Pfad C frei, wirkt nicht stufenlos.","desc":"Component circulation is a prerequisite for combined machine-and-component flows.","desc_de":"Der Komponentenkreislauf ist Voraussetzung für kombinierte Maschinen- und Komponentenflüsse.","reason_en":"Type 'prerequisite' instead of causal: unlocks path C, no gradual effect.","source":"Manuskript Table 6/Fig. 4","row":56,"chapter":7},{"id":"R056","src":"B2 Machine Circulation","dst":"C Combined M&C Flows","pol":"+","art":"Voraussetzung","strength":"","delay":"","status":"Geändert","reason":"Art 'Voraussetzung' statt kausal.","desc":"Machine circulation is a prerequisite for combined machine-and-component flows.","desc_de":"Der Maschinenkreislauf ist Voraussetzung für kombinierte Maschinen- und Komponentenflüsse.","reason_en":"Type 'prerequisite' instead of causal.","source":"Manuskript Table 6/Fig. 4","row":57,"chapter":7},{"id":"R057","src":"C Combined M&C Flows","dst":"D Pay-per-use","pol":"+","art":"Voraussetzung","strength":"","delay":"","status":"Geändert","reason":"Art 'Voraussetzung' statt kausal.","desc":"Combined flows are a prerequisite for result-oriented pay-per-use models.","desc_de":"Kombinierte Flüsse sind Voraussetzung für ergebnisorientierte Pay-per-use-Modelle.","reason_en":"Type 'prerequisite' instead of causal.","source":"Manuskript Table 6/Fig. 4","row":58,"chapter":7},{"id":"R058","src":"B1 Component Circulation","dst":"Scouting","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Component circulation requires scouting of returnable components.","desc_de":"Der Komponentenkreislauf erfordert das Scouting rücknahmefähiger Komponenten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":59,"chapter":5},{"id":"R059","src":"B1 Component Circulation","dst":"Refurbishment","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Component circulation requires refurbishment of components.","desc_de":"Der Komponentenkreislauf erfordert das Refurbishment von Komponenten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":60,"chapter":5},{"id":"R060","src":"B1 Component Circulation","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Component circulation requires reverse logistics.","desc_de":"Der Komponentenkreislauf erfordert Rücklogistik.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":61,"chapter":5},{"id":"R061","src":"B2 Machine Circulation","dst":"Scouting","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Machine circulation requires scouting of returnable machines.","desc_de":"Der Maschinenkreislauf erfordert das Scouting rücknahmefähiger Maschinen.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":62,"chapter":5},{"id":"R062","src":"B2 Machine Circulation","dst":"Refurbishment","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Machine circulation requires refurbishment of machines.","desc_de":"Der Maschinenkreislauf erfordert das Refurbishment von Maschinen.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":63,"chapter":5},{"id":"R063","src":"B2 Machine Circulation","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Machine circulation requires reverse logistics.","desc_de":"Der Maschinenkreislauf erfordert Rücklogistik.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":64,"chapter":5},{"id":"R064","src":"A Machine Repair","dst":"Product Lifetime","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Bestehend","reason":"","desc":"Machine repair (slowing strategy) extends product lifetime.","desc_de":"Maschinenreparatur (Slowing-Strategie) verlängert die Lebensdauer.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":65,"chapter":2},{"id":"R065","src":"C Combined M&C Flows","dst":"Coordination of M&C Flows","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Combined flows require coordination of separate machine and component flows.","desc_de":"Kombinierte Flüsse erfordern die Koordination getrennter Maschinen- und Komponentenflüsse.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":66,"chapter":7},{"id":"R066","src":"B1 Component Circulation","dst":"Supplier Collaboration","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Component circulation intensifies information sharing with suppliers.","desc_de":"Der Komponentenkreislauf intensiviert den Informationsaustausch mit Lieferanten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":67,"chapter":5},{"id":"R067","src":"B2 Machine Circulation","dst":"Supplier Collaboration","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Machine circulation intensifies information sharing with suppliers.","desc_de":"Der Maschinenkreislauf intensiviert den Informationsaustausch mit Lieferanten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":68,"chapter":5},{"id":"R068","src":"D Pay-per-use","dst":"Customer Collaboration","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Bestehend","reason":"","desc":"Pay-per-use requires intensified customer collaboration (risk and machine-data sharing).","desc_de":"Pay-per-use erfordert engere Zusammenarbeit mit Kunden (Risiko- und Maschinendaten-Austausch).","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":69,"chapter":7},{"id":"R069","src":"Scouting","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Scouting identifies returnable units and feeds the reverse logistics process.","desc_de":"Scouting findet rücknahmefähige Einheiten und speist die Rücklogistik.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":70,"chapter":5},{"id":"R070","src":"Refurbishment","dst":"Recovered Material Inflow","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Geändert","reason":"Nur Umbenennung des Ziels.","desc":"Refurbished machines and components re-enter as material inflow.","desc_de":"Aufbereitete Maschinen und Komponenten fliessen als Material zurück.","reason_en":"Target renamed only.","source":"Manuskript Table 6/Fig. 4","row":71,"chapter":2},{"id":"R071","src":"Refurbishment","dst":"Product Lifetime","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Bestehend","reason":"","desc":"Refurbishment (slowing strategy) extends product lifetime.","desc_de":"Refurbishment (Slowing-Strategie) verlängert die Lebensdauer.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":72,"chapter":2},{"id":"R072","src":"Refurbishment","dst":"Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Bestehend","reason":"","desc":"Refurbishment activities add to costs.","desc_de":"Refurbishment verursacht Kosten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":73,"chapter":2},{"id":"R073","src":"Coordination of M&C Flows","dst":"Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Bestehend","reason":"","desc":"Coordinating machine and component flows increases managerial complexity and costs.","desc_de":"Die Koordination der Maschinen- und Komponentenflüsse erhöht Komplexität und Kosten.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":74,"chapter":7},{"id":"R074","src":"Customer Collaboration","dst":"Product Condition Analysis","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Machine-data sharing enables product condition analysis.","desc_de":"Der Austausch von Maschinendaten ermöglicht die Zustandsanalyse.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":75,"chapter":5},{"id":"R075","src":"Customer Collaboration","dst":"Customer Trust","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Risk sharing deepens the customer relationship and builds trust.","desc_de":"Geteiltes Risiko vertieft die Kundenbeziehung und schafft Vertrauen.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":76,"chapter":4},{"id":"R076","src":"Supplier Collaboration","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Bestehend","reason":"","desc":"Supplier information sharing smooths the reverse logistics process.","desc_de":"Informationsaustausch mit Lieferanten erleichtert die Rücklogistik.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":77,"chapter":5},{"id":"R077","src":"D Pay-per-use","dst":"Revenue","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Bestehend","reason":"","desc":"Pay-per-use generates recurring, result-oriented revenue.","desc_de":"Pay-per-use erzeugt wiederkehrenden, ergebnisorientierten Umsatz.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":78,"chapter":7},{"id":"R078","src":"D Pay-per-use","dst":"Installed Base","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Bestehend","reason":"","desc":"Under pay-per-use the provider retains ownership, growing the installed base.","desc_de":"Bei Pay-per-use bleibt der Anbieter Eigentümer, die installierte Basis wächst.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":79,"chapter":7},{"id":"R079","src":"Investment in Circularity","dst":"Cashflow","pol":"-","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"Ohne diesen Gegeneffekt sind Investitionen gratis; der zentrale Trade-off aus Kap. 2 fehlt.","desc":"Investment in circularity consumes cashflow.","desc_de":"Investitionen in Zirkularität verbrauchen Cashflow.","reason_en":"Without this counter-effect investments are free; the central trade-off of chapter 2 is missing.","source":"Storyline Kap. 2","row":null,"chapter":1},{"id":"R080","src":"Price","dst":"Purchase Decision","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Sonst erhöht ein höherer Preis den Umsatz unbegrenzt.","desc":"A higher price lowers the purchase decision.","desc_de":"Ein höherer Preis senkt die Kaufbereitschaft.","reason_en":"Otherwise a higher price raises revenue without limit.","source":"","row":null,"chapter":1},{"id":"R081","src":"Purchase Decision","dst":"Sales","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"Verbindet die Nachfrage-Stränge (ersetzt Zeile 7).","desc":"Purchase decisions translate into sales of new machines.","desc_de":"Kaufentscheide führen zum Absatz neuer Maschinen.","reason_en":"Connects the demand strands (replaces row 7).","source":"","row":null,"chapter":1},{"id":"R082","src":"Sales","dst":"Revenue","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"Verbindet die Nachfrage-Stränge (ersetzt Zeile 7).","desc":"Sales of new machines generate revenue.","desc_de":"Der Absatz neuer Maschinen erzeugt Umsatz.","reason_en":"Connects the demand strands (replaces row 7).","source":"","row":null,"chapter":1},{"id":"R083","src":"Modularity of the Product","dst":"Development Effort","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Gegeneffekt zu Modularität (Kap. 6).","desc":"Modular design requires more development effort.","desc_de":"Modulares Design erfordert mehr Entwicklungsaufwand.","reason_en":"Counter-effect of modularity (ch. 6).","source":"Storyline Kap. 6","row":null,"chapter":6},{"id":"R084","src":"Circular Product Design","dst":"Development Effort","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Gegeneffekt zu Produktdesign.","desc":"Circular product design requires more development effort.","desc_de":"Zirkuläres Produktdesign erfordert mehr Entwicklungsaufwand.","reason_en":"Counter-effect of product design.","source":"Storyline Kap. 6","row":null,"chapter":6},{"id":"R085","src":"Development Effort","dst":"Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Neu","reason":"","desc":"Development effort adds to costs.","desc_de":"Entwicklungsaufwand erhöht die Kosten.","reason_en":"","source":"Storyline Kap. 6","row":null,"chapter":6},{"id":"R086","src":"Product Lifetime","dst":"Purchase Decision","pol":"-","art":"Kausal","strength":"mittel","delay":"lang","status":"Neu","reason":"Klassisches Dilemma der Kreislaufwirtschaft: Langlebigkeit senkt den Neuabsatz. Macht Pay-per-use als Ausweg verständlich.","desc":"Longer-lasting machines reduce replacement purchases.","desc_de":"Langlebigere Maschinen senken den Ersatzbedarf.","reason_en":"Classic circular economy dilemma: longevity lowers new-machine sales. Makes pay-per-use understandable as a way out.","source":"Storyline Kap. 4/6","row":null,"chapter":2},{"id":"R087","src":"Circular Market Volume","dst":"Purchase Decision","pol":"-","art":"Kausal","strength":"schwach","delay":"mittel","status":"Neu","reason":"Kannibalisierung. Stärke diskutieren.","desc":"Refurbished offers partly cannibalise new-machine purchases.","desc_de":"Zirkuläre Angebote ersetzen teilweise den Kauf neuer Maschinen.","reason_en":"Cannibalisation. Strength to be discussed.","source":"Storyline Kap. 4","row":null,"chapter":2},{"id":"R088","src":"Water and Energy","dst":"Costs","pol":"+","art":"Kausal","strength":"schwach","delay":"keine","status":"Neu","reason":"Schliesst die Ökologie an die Wirtschaft an.","desc":"Water and energy consumption adds to operating costs.","desc_de":"Wasser- und Energieverbrauch erhöhen die Betriebskosten.","reason_en":"Connects ecology to the economy.","source":"","row":null,"chapter":1},{"id":"R089","src":"Recovered Material Inflow","dst":"Costs","pol":"-","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Business Case der Zirkularität ('es muss sich lohnen').","desc":"Recovered material is cheaper than virgin material.","desc_de":"Rückgewonnenes Material ist günstiger als Neumaterial.","reason_en":"Business case of circularity ('it has to pay off').","source":"Storyline Kap. 2","row":null,"chapter":2},{"id":"R090","src":"Recycling","dst":"Material Circularity Index %","pol":"+","art":"Kausal","strength":"schwach","delay":"kurz","status":"Neu","reason":"Bewusst schwächer als Repair/Refurbishment.","desc":"Recycling raises the material circularity index (lower-value R-strategy).","desc_de":"Recycling erhöht den Circularity Index (R-Strategie mit geringerer Wertschöpfung).","reason_en":"Deliberately weaker than repair and refurbishment.","source":"Storyline Kap. 2","row":null,"chapter":2},{"id":"R091","src":"Recycling","dst":"Recovered Material Inflow","pol":"+","art":"Kausal","strength":"schwach","delay":"kurz","status":"Neu","reason":"","desc":"Recycling returns some material as inflow.","desc_de":"Recycling führt einen Teil des Materials zurück.","reason_en":"","source":"Storyline Kap. 2","row":null,"chapter":2},{"id":"R092","src":"Recycling","dst":"Costs","pol":"+","art":"Kausal","strength":"schwach","delay":"keine","status":"Neu","reason":"","desc":"Recycling processes add costs.","desc_de":"Recyclingprozesse verursachen Kosten.","reason_en":"","source":"Storyline Kap. 2","row":null,"chapter":2},{"id":"R093","src":"Refurbishment","dst":"Circular Market Volume","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Sonst erzeugt Refurbishment nur Kosten, aber keinen Absatz.","desc":"Refurbished machines and components are sold on the circular market.","desc_de":"Aufbereitete Maschinen und Komponenten werden auf dem zirkulären Markt verkauft.","reason_en":"Otherwise refurbishment only creates costs but no sales.","source":"Storyline Kap. 4","row":null,"chapter":2},{"id":"R094","src":"Customer Acceptance of Circular Offers","dst":"Circular Market Volume","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"","desc":"Customer acceptance determines demand for circular offers.","desc_de":"Die Akzeptanz der Kunden bestimmt die Nachfrage nach zirkulären Angeboten.","reason_en":"","source":"Storyline Kap. 4","row":null,"chapter":4},{"id":"R095","src":"Customer Trust","dst":"Customer Acceptance of Circular Offers","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Trusting customers are more open to refurbished or service offers.","desc_de":"Kunden mit Vertrauen sind offener für Refurbished- oder Serviceangebote.","reason_en":"","source":"Storyline Kap. 4","row":null,"chapter":4},{"id":"R096","src":"Marketing","dst":"Customer Acceptance of Circular Offers","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"'Kunden müssen mitgenommen werden'.","desc":"Customer communication makes the value of circular offers visible.","desc_de":"Kundenkommunikation macht den Nutzen zirkulärer Angebote sichtbar.","reason_en":"'Customers need to be taken along.'","source":"Storyline Kap. 4","row":null,"chapter":4},{"id":"R097","src":"Preference for New Machines","dst":"Customer Acceptance of Circular Offers","pol":"-","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"Ereignis 'Kundenschock'.","desc":"Customers still prefer new machines (customer shock).","desc_de":"Kunden bevorzugen weiterhin neue Maschinen (Kundenschock).","reason_en":"Event 'customer shock'.","source":"Storyline Kap. 4","row":null,"chapter":4},{"id":"R098","src":"Customer Expectations","dst":"Customer Acceptance of Circular Offers","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Sustainability expectations raise acceptance of circular offers.","desc_de":"Nachhaltigkeitserwartungen erhöhen die Akzeptanz zirkulärer Angebote.","reason_en":"","source":"","row":null,"chapter":4},{"id":"R099","src":"Installed Base","dst":"Return Volume","pol":"+","art":"Kausal","strength":"stark","delay":"lang","status":"Neu","reason":"Rückläufe kommen mit Verzögerung aus der installierten Basis.","desc":"A larger installed base yields more potential returns.","desc_de":"Eine grössere installierte Basis ergibt mehr mögliche Rückläufe.","reason_en":"Returns come from the installed base with a delay.","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R100","src":"Reimbursement Models","dst":"Return Volume","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"Ersetzt Zeile 22 mit umgekehrter Richtung.","desc":"Buy-back incentives increase the return volume.","desc_de":"Rückkaufanreize erhöhen das Rücklaufvolumen.","reason_en":"Replaces row 22 with reversed direction.","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R101","src":"Return Volume","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"","desc":"Higher return volume feeds reverse logistics.","desc_de":"Mehr Rückläufe speisen die Rücklogistik.","reason_en":"","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R102","src":"Return Volume","dst":"Logistics Costs","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Neu","reason":"","desc":"Higher return volume raises logistics costs.","desc_de":"Mehr Rückläufe erhöhen die Logistikkosten.","reason_en":"","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R103","src":"Triage of Circular Components","dst":"Return Quality","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"","desc":"Triage sorts out usable parts and raises usable return quality.","desc_de":"Die Triage sortiert brauchbare Teile aus und erhöht die nutzbare Rücklaufqualität.","reason_en":"","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R104","src":"Return Quality","dst":"Refurbishment","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"","desc":"Better return quality enables more refurbishment.","desc_de":"Bessere Rücklaufqualität ermöglicht mehr Refurbishment.","reason_en":"","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R105","src":"Return Quality","dst":"Costs","pol":"-","art":"Kausal","strength":"mittel","delay":"keine","status":"Neu","reason":"'Schlechte Qualität → Kosten ↑'.","desc":"Poor return quality drives up costs (rework, scrap).","desc_de":"Schlechte Rücklaufqualität treibt die Kosten (Nacharbeit, Ausschuss).","reason_en":"'Poor quality → costs ↑'.","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R106","src":"Supply Chain Shock","dst":"Return Quality","pol":"-","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"Ereignis 'Supply-Chain-Schock'.","desc":"A supply chain shock lowers return quality.","desc_de":"Ein Supply-Chain-Schock senkt die Rücklaufqualität.","reason_en":"Event 'supply chain shock'.","source":"Storyline Kap. 5","row":null,"chapter":5},{"id":"R107","src":"Strategic CE Focus","dst":"Investment in Circularity","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"'Strategischer Fokus → Ressourcenallokation'.","desc":"A clear CE goal directs resources into circularity.","desc_de":"Ein klares CE-Ziel lenkt Ressourcen in die Zirkularität.","reason_en":"'Strategic focus → resource allocation'.","source":"Storyline Kap. 1","row":null,"chapter":1},{"id":"R108","src":"Management Support","dst":"Investment in Circularity","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"","desc":"Management support releases budget for circularity.","desc_de":"Management Support gibt Budget für Zirkularität frei.","reason_en":"","source":"Storyline Kap. 1","row":null,"chapter":1},{"id":"R109","src":"Cashflow","dst":"Management Support","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"'Am Ende muss es sich finanziell lohnen'.","desc":"A healthy business case strengthens management support.","desc_de":"Ein tragfähiger Business Case stärkt den Management Support.","reason_en":"'In the end it has to pay off financially.'","source":"Storyline Kap. 2","row":null,"chapter":1},{"id":"R110","src":"Regulatory Pressure","dst":"Customer Expectations","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Neu","reason":"Macht Customer Expectations endogen.","desc":"Regulation raises customers' sustainability expectations.","desc_de":"Regulierung erhöht die Nachhaltigkeitserwartungen der Kunden.","reason_en":"Makes Customer Expectations endogenous.","source":"","row":null,"chapter":1},{"id":"R111","src":"Regulatory Pressure","dst":"Management Support","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Regulatory pressure increases management attention to circularity.","desc_de":"Regulatorischer Druck erhöht die Aufmerksamkeit des Managements für Zirkularität.","reason_en":"","source":"","row":null,"chapter":1},{"id":"R112","src":"KPI System","dst":"Measurability","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"","desc":"A KPI system makes circularity measurable.","desc_de":"Ein KPI-System macht Zirkularität messbar.","reason_en":"","source":"Storyline Kap. 8","row":null,"chapter":8},{"id":"R113","src":"Measurability","dst":"Management Support","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"'Fehlende Evidenz → Management Support ↓'.","desc":"Measurable evidence secures management support.","desc_de":"Messbare Evidenz sichert den Management Support.","reason_en":"'Missing evidence → management support ↓'.","source":"Storyline Kap. 8","row":null,"chapter":8},{"id":"R114","src":"Material Circularity Index %","dst":"Management Support","pol":"+","art":"Kausal","strength":"schwach","delay":"mittel","status":"Neu","reason":"Wirkt in der Simulation nur so stark, wie Messbarkeit es zulässt (Moderator).","desc":"Visible circularity results strengthen management support.","desc_de":"Sichtbare Zirkularitätserfolge stärken den Management Support.","reason_en":"In the simulation only as strong as measurability allows (moderator).","source":"Storyline Kap. 8","row":null,"chapter":1},{"id":"R115","src":"Cross-functional Team","dst":"Transformation Capability","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Neu","reason":"'Integration → Transformationsfähigkeit ↑'.","desc":"A cross-functional team increases transformation capability.","desc_de":"Ein cross-funktionales Team erhöht die Transformationsfähigkeit.","reason_en":"'Integration → transformation capability ↑'.","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R116","src":"Cross-functional Team","dst":"Costs","pol":"+","art":"Kausal","strength":"schwach","delay":"keine","status":"Neu","reason":"Gegeneffekt.","desc":"A dedicated team ties up resources.","desc_de":"Ein eigenes Team bindet Ressourcen.","reason_en":"Counter-effect.","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R117","src":"Partner Integration","dst":"Transformation Capability","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"'Ich muss nicht alles selbst machen'.","desc":"External partners add capabilities.","desc_de":"Externe Partner bringen zusätzliche Fähigkeiten.","reason_en":"'I don't have to do everything myself.'","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R118","src":"Partner Integration","dst":"Supplier Collaboration","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Integrated partners intensify supply chain collaboration.","desc_de":"Integrierte Partner intensivieren die Zusammenarbeit in der Lieferkette.","reason_en":"","source":"Storyline Kap. 5","row":null,"chapter":3},{"id":"R119","src":"Management Support","dst":"Buy-in","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Visible management support creates buy-in.","desc_de":"Sichtbarer Management Support schafft Buy-in.","reason_en":"","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R120","src":"Employee Satisfaction","dst":"Buy-in","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"Verbindet Sozial und Organisation.","desc":"Satisfied employees support the transformation.","desc_de":"Zufriedene Mitarbeitende unterstützen die Transformation.","reason_en":"Connects social and organisation.","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R121","src":"Buy-in","dst":"Transformation Capability","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Neu","reason":"'Buy-in ist zentral'.","desc":"Buy-in increases transformation capability.","desc_de":"Buy-in erhöht die Transformationsfähigkeit.","reason_en":"'Buy-in is key.'","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R122","src":"Labor Turnover Rate","dst":"Transformation Capability","pol":"-","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"Verbindet Sozial und Organisation.","desc":"Turnover means loss of know-how.","desc_de":"Fluktuation bedeutet Verlust von Know-how.","reason_en":"Connects social and organisation.","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R123","src":"Transformation Capability","dst":"Refurbishment","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"","desc":"Transformation capability enables refurbishment at scale.","desc_de":"Transformationsfähigkeit ermöglicht Refurbishment im grossen Massstab.","reason_en":"","source":"Storyline Kap. 3","row":null,"chapter":3},{"id":"R124","src":"Transformation Capability","dst":"Reverse Logistic","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"","desc":"Transformation capability enables working reverse logistics.","desc_de":"Transformationsfähigkeit ermöglicht eine funktionierende Rücklogistik.","reason_en":"","source":"Storyline Kap. 3","row":null,"chapter":5},{"id":"R125","src":"B1 Component Circulation","dst":"Complexity","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Neu","reason":"'Komplexität und Investitionen ↑'.","desc":"Component circulation increases complexity.","desc_de":"Der Komponentenkreislauf erhöht die Komplexität.","reason_en":"'Complexity and investment ↑'.","source":"Storyline Kap. 2","row":null,"chapter":5},{"id":"R126","src":"B2 Machine Circulation","dst":"Complexity","pol":"+","art":"Kausal","strength":"mittel","delay":"keine","status":"Neu","reason":"","desc":"Machine circulation increases complexity.","desc_de":"Der Maschinenkreislauf erhöht die Komplexität.","reason_en":"","source":"Storyline Kap. 2","row":null,"chapter":5},{"id":"R127","src":"Coordination of M&C Flows","dst":"Complexity","pol":"+","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"","desc":"Coordinating combined flows increases complexity.","desc_de":"Die Koordination kombinierter Flüsse erhöht die Komplexität.","reason_en":"","source":"Manuskript Table 6/Fig. 4","row":null,"chapter":7},{"id":"R128","src":"Scaling Investment","dst":"Complexity","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"'Skalierung → Komplexität ↑'.","desc":"Scaling increases complexity.","desc_de":"Skalierung erhöht die Komplexität.","reason_en":"'Scaling → complexity ↑'.","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R129","src":"Complexity","dst":"Transformation Capability","pol":"-","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"'Transformation muss handhabbar bleiben'.","desc":"Too much complexity overloads the organisation.","desc_de":"Zu viel Komplexität überlastet die Organisation.","reason_en":"'Transformation must stay manageable.'","source":"Storyline Kap. 7","row":null,"chapter":3},{"id":"R130","src":"Complexity","dst":"Employee Satisfaction","pol":"-","art":"Kausal","strength":"schwach","delay":"mittel","status":"Neu","reason":"Verbindet Organisation und Sozial.","desc":"Complexity and overload reduce employee satisfaction.","desc_de":"Komplexität und Überlastung senken die Mitarbeiterzufriedenheit.","reason_en":"Connects organisation and social.","source":"","row":null,"chapter":3},{"id":"R131","src":"Scaling Investment","dst":"Circular Market Volume","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Neu","reason":"","desc":"Scaling investment expands the circular offer.","desc_de":"Skalierungsinvestitionen bauen das zirkuläre Angebot aus.","reason_en":"","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R132","src":"Scaling Investment","dst":"Cashflow","pol":"-","art":"Kausal","strength":"stark","delay":"keine","status":"Neu","reason":"","desc":"Scaling investment consumes cashflow.","desc_de":"Skalierungsinvestitionen verbrauchen Cashflow.","reason_en":"","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R133","src":"Circular Market Volume","dst":"Real Cases","pol":"+","art":"Kausal","strength":"mittel","delay":"lang","status":"Neu","reason":"","desc":"Successful circular business creates reference cases.","desc_de":"Erfolgreiches zirkuläres Geschäft schafft Referenzfälle.","reason_en":"","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R134","src":"Customer Collaboration","dst":"Real Cases","pol":"+","art":"Kausal","strength":"stark","delay":"mittel","status":"Neu","reason":"'Real Case mit Schlüsselkunden entwickeln'.","desc":"Joint projects with key customers create real cases.","desc_de":"Gemeinsame Projekte mit Schlüsselkunden schaffen Referenzfälle.","reason_en":"'Develop a real case with key customers.'","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R135","src":"Real Cases","dst":"Buy-in","pol":"+","art":"Kausal","strength":"stark","delay":"kurz","status":"Neu","reason":"'Referenzcases → internes Buy-in ↑'.","desc":"Reference cases convince internal stakeholders.","desc_de":"Referenzfälle überzeugen interne Anspruchsgruppen.","reason_en":"'Reference cases → internal buy-in ↑'.","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R136","src":"Real Cases","dst":"Customer Acceptance of Circular Offers","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"","desc":"Reference cases convince other customers.","desc_de":"Referenzfälle überzeugen weitere Kunden.","reason_en":"","source":"Storyline Kap. 7","row":null,"chapter":7},{"id":"R137","src":"Material Circularity Index %","dst":"Meaningfulness of Work","pol":"+","art":"Kausal","strength":"schwach","delay":"lang","status":"Neu","reason":"Verbindet Ökologie und Sozial. Meaningfulness bleibt zusätzlich Hebel.","desc":"Visible circularity makes work feel more meaningful.","desc_de":"Sichtbare Zirkularität macht die Arbeit sinnvoller.","reason_en":"Connects ecology and social. Meaningfulness remains a lever as well.","source":"Herzberg","row":null,"chapter":3},{"id":"R138","src":"CO2","dst":"Customer Trust","pol":"-","art":"Kausal","strength":"schwach","delay":"lang","status":"Neu","reason":"Schliesst die Ökologie an (CO2 war eine Sackgasse).","desc":"A high CO2 footprint damages reputation with customers.","desc_de":"Ein hoher CO2-Fussabdruck schadet der Reputation bei Kunden.","reason_en":"Connects ecology (CO2 was a dead end).","source":"","row":null,"chapter":1},{"id":"R139","src":"CO2","dst":"Employer Brand","pol":"-","art":"Kausal","strength":"schwach","delay":"lang","status":"Neu","reason":"Schliesst die Ökologie an.","desc":"A high CO2 footprint weakens the employer brand.","desc_de":"Ein hoher CO2-Fussabdruck schwächt die Arbeitgebermarke.","reason_en":"Connects ecology.","source":"","row":null,"chapter":3},{"id":"R140","src":"Circular Market Volume","dst":"Complexity","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"Bildet die Wachstumsgrenze (B): mehr zirkuläres Geschäft → Komplexität → weniger Transformationsfähigkeit.","desc":"A growing circular business increases operational complexity.","desc_de":"Ein wachsendes zirkuläres Geschäft erhöht die operative Komplexität.","reason_en":"Forms the growth limit (B): more circular business → complexity → less transformation capability.","source":"Storyline Kap. 7","row":null,"chapter":2},{"id":"R141","src":"Customer Trust","dst":"Customer Collaboration","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"Verstärkender Kreislauf Vertrauen ↔ Zusammenarbeit.","desc":"Trusting customers are willing to share machine data and risks.","desc_de":"Kunden mit Vertrauen teilen eher Maschinendaten und Risiken.","reason_en":"Reinforcing loop trust ↔ collaboration.","source":"Storyline Kap. 4","row":null,"chapter":4},{"id":"R142","src":"Transformation Capability","dst":"Measurability","pol":"+","art":"Kausal","strength":"mittel","delay":"mittel","status":"Neu","reason":"Verstärkender Kreislauf 'Evidenz': Messbarkeit → Management Support → Buy-in → Fähigkeit → Messbarkeit.","desc":"A capable organisation is able to collect and use circularity data.","desc_de":"Eine fähige Organisation kann Zirkularitätsdaten erheben und nutzen.","reason_en":"Reinforcing loop 'evidence': measurability → management support → buy-in → capability → measurability.","source":"Storyline Kap. 8","row":null,"chapter":8},{"id":"R143","src":"Connectivity of the Product","dst":"Measurability","pol":"+","art":"Kausal","strength":"mittel","delay":"kurz","status":"Neu","reason":"","desc":"Connected products deliver usage and condition data for measurement.","desc_de":"Vernetzte Produkte liefern Nutzungs- und Zustandsdaten für die Messung.","reason_en":"","source":"Storyline Kap. 8","row":null,"chapter":8}],"chapters":[{"n":1,"title":"Die Vision","question":"Was priorisieren wir?","levers":"Strategic CE Focus, Investment in Circularity, Price, Marketing","event":"","cbm":"","aha":"CE verändert die Kriterien für gute Entscheidungen. Es braucht einen CBM-Plan.","title_en":"The Vision","question_en":"What do we prioritise?","aha_en":"CE changes the criteria for good decisions. A CBM plan is needed."},{"n":2,"title":"Die erste Ernüchterung","question":"Recycling, Repair oder Refurbishment?","levers":"Recycling, A Machine Repair","event":"","cbm":"A","aha":"Recycling ist besser als nichts, aber oft nicht der stärkste Hebel. Am Ende muss es sich lohnen.","title_en":"The First Disillusionment","question_en":"Recycling, repair or refurbishment?","aha_en":"Recycling is better than nothing, but often not the strongest lever. In the end it has to pay off."},{"n":3,"title":"Die Organisationskrise","question":"Wer trägt die Transformation?","levers":"Cross-functional Team, Partner Integration, Meaningfulness of Work, Job Certainty, Company Rules and Policy","event":"","cbm":"","aha":"Ich muss nicht alles selbst machen. Buy-in ist zentral.","title_en":"The Organisational Crisis","question_en":"Who carries the transformation?","aha_en":"I don't have to do everything myself. Buy-in is key."},{"n":4,"title":"Der Kundenschock","question":"Wie reagiert der Markt?","levers":"Marketing","event":"Preference for New Machines","cbm":"","aha":"Kunden fragen weiterhin nach neuen Maschinen. Zirkularität impliziert Serviceorientierung.","title_en":"The Customer Shock","question_en":"How does the market react?","aha_en":"Customers keep asking for new machines. Circularity implies service orientation."},{"n":5,"title":"Der Supply-Chain-Schock","question":"Woher kommen die Rückläufe?","levers":"Reimbursement Models, B1 Component Circulation, B2 Machine Circulation, Partner Integration","event":"Supply Chain Shock","cbm":"B1, B2","aha":"Returns ermöglichen erst Zirkularität. Qualität und Volumen sind kritisch. Maschine ≠ Komponente.","title_en":"The Supply Chain Shock","question_en":"Where do the returns come from?","aha_en":"Returns are what make circularity possible. Quality and volume are critical. Machine ≠ component."},{"n":6,"title":"Die Produkttransformation","question":"Was muss im Design anders werden?","levers":"Circular Product Design, Investment in Circularity","event":"","cbm":"","aha":"Langlebigkeit, Reparierbarkeit und Upgradability entstehen durch Modularität.","title_en":"The Product Transformation","question_en":"What has to change in the design?","aha_en":"Longevity, reparability and upgradability come from modularity."},{"n":7,"title":"Die Skalierungsfrage","question":"Wie wird aus dem Pilot ein Geschäft?","levers":"Scaling Investment, C Combined M&C Flows, D Pay-per-use","event":"","cbm":"C, D","aha":"Real Cases pushen Pilotprojekte. Transformation muss handhabbar bleiben.","title_en":"The Scaling Question","question_en":"How does a pilot become a business?","aha_en":"Real cases push pilot projects. Transformation has to stay manageable."},{"n":8,"title":"Die Reifephase","question":"Wirkt die Transformation?","levers":"KPI System","event":"","cbm":"","aha":"Zirkularität messen ist nicht straightforward, aber notwendig.","title_en":"The Maturity Phase","question_en":"Does the transformation work?","aha_en":"Measuring circularity is not straightforward, but necessary."}],"keyLoops":[{"name":"Investitionsbremse","nodes":["Cashflow","Investment in Circularity"],"note":"Investitionen in Zirkularität kosten Cashflow und bremsen sich damit selbst.","name_en":"Investment brake","note_en":"Investing in circularity costs cashflow and thus slows itself down."},{"name":"Business Case","nodes":["Cashflow","Management Support","Investment in Circularity"],"note":"Ein guter Cashflow bringt Management Support, die Investition belastet aber den Cashflow.","name_en":"Business case","note_en":"Good cashflow earns management support, but the investment drains cashflow."},{"name":"CO2-Reputation","nodes":["Purchase Decision","Sales","Production Volume","Material Outflow","CO2","Customer Trust"],"note":"Mehr Absatz bedeutet mehr Abfall und CO2. Das kostet Vertrauen und bremst den Absatz.","name_en":"CO2 reputation","note_en":"More sales mean more waste and CO2. That costs trust and slows sales."},{"name":"Kannibalisierung","nodes":["Purchase Decision","Sales","Installed Base","Circular Market Volume"],"note":"Zirkuläre Angebote aus der installierten Basis ersetzen teilweise den Kauf neuer Maschinen.","name_en":"Cannibalisation","note_en":"Circular offers from the installed base partly replace purchases of new machines."},{"name":"Komplexitätsgrenze","nodes":["Circular Market Volume","Complexity","Transformation Capability","Refurbishment"],"note":"Wachsendes zirkuläres Geschäft erhöht die Komplexität und begrenzt die Transformationsfähigkeit.","name_en":"Complexity limit","note_en":"A growing circular business adds complexity and limits transformation capability."},{"name":"Überlastung","nodes":["Transformation Capability","Refurbishment","Circular Market Volume","Complexity","Employee Satisfaction","Buy-in"],"note":"Komplexität belastet die Mitarbeitenden, sinkendes Buy-in bremst die Transformation.","name_en":"Overload","note_en":"Complexity strains employees, falling buy-in slows the transformation."},{"name":"Vertrauen & Zusammenarbeit","nodes":["Customer Trust","Customer Collaboration"],"note":"Vertrauen ermöglicht Datenaustausch mit Kunden, Zusammenarbeit stärkt das Vertrauen.","name_en":"Trust & collaboration","note_en":"Trust enables data sharing with customers, collaboration builds trust."},{"name":"Vertrauen durch Service","nodes":["Cashflow","Investment in Circularity","Modularity of the Product","Service Quality","Customer Trust","Purchase Decision","Sales","Revenue"],"note":"Investitionen in Modularität verbessern den Service, das Vertrauen und den Umsatz.","name_en":"Trust through service","note_en":"Investing in modularity improves service, trust and revenue."},{"name":"Langlebigkeits-Dilemma","nodes":["Investment in Circularity","Modularity of the Product","Product Lifetime","Purchase Decision","Sales","Revenue","Cashflow"],"note":"Langlebigere Maschinen senken den Ersatzbedarf und damit den Umsatz, der die Investition finanziert.","name_en":"Longevity dilemma","note_en":"Longer-lasting machines reduce replacement demand and thus the revenue that funds the investment."},{"name":"Rückläufe senken Kosten","nodes":["Installed Base","Return Volume","Reverse Logistic","Recovered Material Inflow","Costs","Cashflow","Investment in Circularity","Modularity of the Product","Service Quality","Customer Trust","Purchase Decision","Sales"],"note":"Rückläufe liefern günstiges Material, das stärkt Cashflow, Investition, Service und Absatz.","name_en":"Returns lower costs","note_en":"Returns provide cheap material, which strengthens cashflow, investment, service and sales."},{"name":"Referenzfälle","nodes":["Circular Market Volume","Real Cases","Customer Acceptance of Circular Offers"],"note":"Erfolgreiche zirkuläre Projekte überzeugen weitere Kunden.","name_en":"Reference cases","note_en":"Successful circular projects convince more customers."},{"name":"Evidenz","nodes":["Measurability","Management Support","Buy-in","Transformation Capability"],"note":"Messbare Ergebnisse sichern Management Support und Buy-in, das stärkt die Fähigkeit zu messen.","name_en":"Evidence","note_en":"Measurable results secure management support and buy-in, which strengthens the ability to measure."}]};
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const BW = 156, BH = 44;
+  const W = DATA.width, H = DATA.height;
+  const svg = document.getElementById("svg");
+  const side = document.getElementById("side");
+  const byId = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
+  const chapterOf = Object.fromEntries(DATA.chapters.map(c => [c.n, c]));
+  const TYPE_CLASS = { "Hebel": "t-lever", "Zustand": "t-stock", "Indikator": "t-ind", "Ereignis": "t-event" };
+  const STATUS_NODE = { "Neu": "s-new", "Geändert": "s-chg", "Umbenannt": "s-chg", "Bestehend": "s-old" };
+  const state = { view: "draft", lang: "de", chapter: 0, sel: null, loop: null };
+  try { const l = localStorage.getItem("circulus-lang"); if (l === "en" || l === "de") state.lang = l; } catch (e) {}
+
+  // ---------- Texte ----------
+  const T = {
+    de: {
+      h1: "Circulus Systemkarte", view: "Ansicht", draft: "Entwurf", orig: "Original CLD v4", diff: "Änderungen", lang: "Sprache",
+      fit: "Einpassen", full: "Vollbild", zin: "Vergrössern", zout: "Verkleinern", fitT: "Ganzes System zeigen",
+      hint: "Mausrad: zoomen · Ziehen: verschieben · Klick auf Variable: Details",
+      svg: "Causal Loop Diagram des Circulus-Modells", chapters: "Kapitel",
+      meta: (d, n, e, l, r) => `Modell-Entwurf · Stand ${d} · ${n} Variablen · ${e} Beziehungen · ${l} Kreisläufe (${r} R, ${l - r} B)`,
+      all: "Gesamt", allT: "Ganzes System", chap: "Kapitel",
+      capAll: "<b>Gesamtsystem</b> <span class=\"q\">· alle Kapitel der Storyline</span><div class=\"meta\">Wähle ein Kapitel, um das System Schritt für Schritt aufzubauen wie im BMI-Prototyp. Neue Elemente des Kapitels sind farbig umrandet. Die kleine Zahl oben rechts in jeder Variable ist ihr Kapitel.</div>",
+      levers: "Hebel", event: "Ereignis", cbm: "CBM-Pfad", fresh: n => `${n} neue Variablen`,
+      overview: "Übersicht", vars: "Variablen", rels: "Beziehungen", loops: "Kreisläufe", keyLoops: "Zentrale Kreisläufe",
+      incomplete: "In dieser Ansicht nicht vollständig vorhanden.", legend: "Legende",
+      lg: ["Hebel – Entscheidung der Spieler:innen", "CBM-Pfad (A, B1, B2, C, D) aus dem Manuskript", "Zustand – sammelt sich über die Zeit an", "Indikator – ergibt sich laufend", "Ereignis – vom Spiel ausgelöst", "Gestrichelter Rand: neue Variable (Vorschlag)", "<b>+</b> gleichgerichtet: mehr Ursache → mehr Wirkung", "<b>−</b> entgegengesetzt: mehr Ursache → weniger Wirkung", "Gestrichelt: neue Beziehung (Vorschlag)", "Voraussetzung – schaltet einen CBM-Pfad frei"],
+      note1: "Ein Pfeil hat eine Polarität (+/−). Ob ein Kreislauf <b>verstärkend (R)</b> oder <b>ausgleichend (B)</b> ist, ergibt sich aus allen Pfeilen: Eine gerade Anzahl − ergibt R, eine ungerade B.",
+      note2: "Ansicht <b>Original CLD v4</b> zeigt nur Elemente aus der ursprünglichen Excel, <b>Änderungen</b> hebt neue und geänderte Elemente hervor und zeigt die zum Entfernen vorgeschlagenen Beziehungen rot.",
+      back: "← Übersicht", affects: "Wirkt auf", affected: "Wird beeinflusst von", noOut: "Keine Wirkung in dieser Ansicht.",
+      noIn: t => `Wird von nichts im Modell beeinflusst${t === "Hebel" ? " – typisch für einen Hebel" : t === "Ereignis" ? " – typisch für ein Ereignis" : ""}.`,
+      loopsThrough: "Kreisläufe durch diese Variable", shortest: "Gezeigt werden die 12 kürzesten.", noLoop: "Diese Variable liegt in keinem Kreislauf.",
+      R: "Verstärkend", B: "Ausgleichend", nVars: n => `${n} Variablen`, strength: "Stärke", delay: "Verzögerung",
+      enums: {}
+    },
+    en: {
+      h1: "Circulus System Map", view: "View", draft: "Draft", orig: "Original CLD v4", diff: "Changes", lang: "Language",
+      fit: "Fit", full: "Full screen", zin: "Zoom in", zout: "Zoom out", fitT: "Show the whole system",
+      hint: "Scroll: zoom · Drag: pan · Click a variable: details",
+      svg: "Causal loop diagram of the Circulus model", chapters: "Chapters",
+      meta: (d, n, e, l, r) => `Model draft · as of ${d} · ${n} variables · ${e} relations · ${l} loops (${r} R, ${l - r} B)`,
+      all: "All", allT: "Whole system", chap: "Chapter",
+      capAll: "<b>Whole system</b> <span class=\"q\">· all chapters of the storyline</span><div class=\"meta\">Pick a chapter to build up the system step by step, as in the BMI prototype. New elements of the chapter are outlined in colour. The small number at the top right of each variable is its chapter.</div>",
+      levers: "Levers", event: "Event", cbm: "CBM path", fresh: n => `${n} new variables`,
+      overview: "Overview", vars: "Variables", rels: "Relations", loops: "Loops", keyLoops: "Key loops",
+      incomplete: "Not complete in this view.", legend: "Legend",
+      lg: ["Lever – decision of the players", "CBM path (A, B1, B2, C, D) from the manuscript", "Stock – accumulates over time", "Indicator – results continuously", "Event – triggered by the game", "Dashed border: new variable (proposal)", "<b>+</b> same direction: more cause → more effect", "<b>−</b> opposite direction: more cause → less effect", "Dashed: new relation (proposal)", "Prerequisite – unlocks a CBM path"],
+      note1: "Each arrow has a polarity (+/−). Whether a loop is <b>reinforcing (R)</b> or <b>balancing (B)</b> follows from all its arrows: an even number of − gives R, an odd number gives B.",
+      note2: "The <b>Original CLD v4</b> view shows only elements from the original spreadsheet. <b>Changes</b> highlights new and changed elements and shows the relations proposed for removal in red.",
+      back: "← Overview", affects: "Affects", affected: "Affected by", noOut: "No effect in this view.",
+      noIn: t => `Not influenced by anything in the model${t === "Hebel" ? " – typical for a lever" : t === "Ereignis" ? " – typical for an event" : ""}.`,
+      loopsThrough: "Loops through this variable", shortest: "Showing the 12 shortest.", noLoop: "This variable is not part of any loop.",
+      R: "Reinforcing", B: "Balancing", nVars: n => `${n} variables`, strength: "Strength", delay: "Delay",
+      enums: {
+        "Wirtschaft": "Economy", "Sozial": "Social", "Ökologie": "Ecology", "Organisation": "Organisation",
+        "Hebel": "Lever", "Zustand": "Stock", "Indikator": "Indicator", "Ereignis": "Event",
+        "Bestehend": "Existing", "Geändert": "Changed", "Umbenannt": "Renamed", "Neu": "New", "Entfernen": "Remove",
+        "schwach": "weak", "mittel": "medium", "stark": "strong", "keine": "none", "kurz": "short", "lang": "long"
+      }
+    }
+  };
+  const t = k => T[state.lang][k];
+  const en = v => T[state.lang].enums[v] || v;
+
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const L = (de, en_) => state.lang === "de" ? (de || en_) : (en_ || de);
+  const label = n => L(n.de, n.en);
+  const minus = p => p === "-";
+  const nodeList = s => (s || "").split(",").map(x => x.trim()).filter(Boolean).map(x => byId[x] ? label(byId[x]) : x).join(", ");
+
+  // ---------- Sichtbarkeit ----------
+  function nodeOn(n) {
+    if (state.view === "orig" && n.status === "Neu") return false;
+    return state.chapter === 0 || n.chapter <= state.chapter;
+  }
+  function edgeOn(e) {
+    if (state.view === "orig") { if (e.status === "Neu") return false; }
+    else if (state.view === "draft" && e.status === "Entfernen") return false;
+    if (!nodeOn(byId[e.src]) || !nodeOn(byId[e.dst])) return false;
+    return state.chapter === 0 || e.chapter <= state.chapter;
+  }
+  const causal = e => e.art === "Kausal" && (state.view === "orig" ? true : e.status !== "Entfernen");
+
+  // ---------- Kreisläufe ----------
+  function findLoops(edges, maxLen) {
+    const ids = DATA.nodes.map(n => n.id), order = Object.fromEntries(ids.map((id, i) => [id, i]));
+    const adj = {}; edges.forEach(e => (adj[e.src] = adj[e.src] || []).push(e));
+    const out = [];
+    for (const start of ids) {
+      const seen = new Set([start]);
+      (function dfs(cur, path, es) {
+        for (const e of adj[cur] || []) {
+          const nb = e.dst;
+          if (nb === start) { out.push({ nodes: path.slice(), edges: es.concat(e) }); if (out.length > 30000) return; }
+          else if (!seen.has(nb) && order[nb] > order[start] && path.length < maxLen) {
+            seen.add(nb); dfs(nb, path.concat(nb), es.concat(e)); seen.delete(nb);
+          }
+        }
+      })(start, [start], []);
+    }
+    out.forEach(l => { l.type = l.edges.filter(e => minus(e.pol)).length % 2 ? "B" : "R"; });
+    return out;
+  }
+
+  // ---------- Geometrie ----------
+  function clip(cx, cy, tx, ty, pad) {
+    const dx = tx - cx, dy = ty - cy, hw = BW / 2 + pad, hh = BH / 2 + pad;
+    const k = Math.min(dx ? hw / Math.abs(dx) : Infinity, dy ? hh / Math.abs(dy) : Infinity);
+    return k < 1 ? [cx + dx * k, cy + dy * k] : [tx, ty];
+  }
+  function geom(e) {
+    const a = byId[e.src], b = byId[e.dst];
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const bend = Math.min(70, 0.12 * len) + (Math.abs(dy) < 4 && len > 300 ? 34 : 0);
+    const cx = (a.x + b.x) / 2 - dy / len * bend, cy = (a.y + b.y) / 2 + dx / len * bend;
+    const s = clip(a.x, a.y, cx, cy, 1), e2 = clip(b.x, b.y, cx, cy, 3);
+    const bz = u => [(1 - u) ** 2 * s[0] + 2 * (1 - u) * u * cx + u * u * e2[0], (1 - u) ** 2 * s[1] + 2 * (1 - u) * u * cy + u * u * e2[1]];
+    const lp = bz(len > 260 ? 0.9 : 0.8);
+    return { d: `M${s[0].toFixed(1)},${s[1].toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${e2[0].toFixed(1)},${e2[1].toFixed(1)}`, lp };
+  }
+
+  // ---------- Text umbrechen ----------
+  const ctx = document.createElement("canvas").getContext("2d");
+  function wrap(text, size) {
+    ctx.font = `500 ${size}px "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif`;
+    const words = text.split(" "), lines = []; let cur = "";
+    for (const w of words) { const s = cur ? cur + " " + w : w; if (ctx.measureText(s).width > BW - 16 && cur) { lines.push(cur); cur = w; } else cur = s; }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  // ---------- Zeichnen ----------
+  const defs = el("defs", {}, svg);
+  [["p", "--plus"], ["m", "--minus"], ["v", "--prereq"]].forEach(([k, v]) => {
+    const m = el("marker", { id: "ar-" + k, viewBox: "0 0 10 10", refX: "8.5", refY: "5", markerWidth: "11", markerHeight: "11", orient: "auto-start-reverse", markerUnits: "userSpaceOnUse" }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", style: `fill: var(${v})` }, m);
+  });
+  const gBands = el("g", {}, svg), gEdges = el("g", {}, svg), gLabels = el("g", {}, svg), gNodes = el("g", {}, svg);
+  const bandEls = DATA.bands.map(b => {
+    el("rect", { x: 0, y: b.y0, width: W, height: b.y1 - b.y0, style: `fill: var(--band-${b.key})` }, gBands);
+    const lab = el("text", { x: 16, y: b.y0 + 22, class: "band-label" }, gBands);
+    const sub = el("text", { x: 16, y: b.y0 + 40, class: "band-sub" }, gBands);
+    return { b, lab, sub };
+  });
+
+  const edgeEls = DATA.edges.map(e => {
+    const g = geom(e), k = e.art === "Voraussetzung" ? "v" : (minus(e.pol) ? "m" : "p");
+    const path = el("path", { d: g.d, class: "edge " + k, "marker-end": `url(#ar-${k})` }, gEdges);
+    const lab = el("text", { x: g.lp[0].toFixed(1), y: g.lp[1].toFixed(1), class: "plab " + k }, gLabels);
+    lab.textContent = minus(e.pol) ? "−" : "+";
+    return { e, path, lab, k };
+  });
+
+  const nodeEls = DATA.nodes.map(n => {
+    const g = el("g", { class: `node ${TYPE_CLASS[n.type] || "t-ind"} ${STATUS_NODE[n.status] || ""}${/^(A|B1|B2|C|D) /.test(n.id) ? " cbm" : ""}`, transform: `translate(${n.x},${n.y})`, tabindex: "0", role: "button" }, gNodes);
+    el("rect", { class: "halo", x: -BW / 2 - 5, y: -BH / 2 - 5, width: BW + 10, height: BH + 10, rx: n.type === "Indikator" ? 26 : 7 }, g);
+    el("rect", { class: "box", x: -BW / 2, y: -BH / 2, width: BW, height: BH, rx: n.type === "Indikator" ? BH / 2 : 3 }, g);
+    const tg = el("g", {}, g);
+    const k = el("text", { class: "k", x: BW / 2 - 6, y: -BH / 2 + 8 }, g); k.textContent = n.chapter;
+    g.addEventListener("click", ev => { if (dragMoved) return; select(n.id); ev.stopPropagation(); });
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(n.id); } });
+    g.addEventListener("mouseenter", () => hover(n.id));
+    g.addEventListener("mouseleave", () => hover(null));
+    return { n, g, tg };
+  });
+
+  function drawLabels() {
+    nodeEls.forEach(({ n, g, tg }) => {
+      tg.textContent = "";
+      let size = 12.5, lines = wrap(label(n), size);
+      if (lines.length > 2) { size = 11; lines = wrap(label(n), size); }
+      if (lines.length > 3) lines = lines.slice(0, 3);
+      const lh = size * 1.12, y0 = -(lines.length - 1) * lh / 2;
+      lines.forEach((ln, i) => { const tx = el("text", { y: (y0 + i * lh).toFixed(1), style: `font-size:${size}px` }, tg); tx.textContent = ln; });
+      g.setAttribute("aria-label", label(n));
+    });
+    bandEls.forEach(({ b, lab, sub }) => { lab.textContent = L(b.label, b.label_en); sub.textContent = L(b.sub, b.sub_en); });
+  }
+
+  function staticTexts() {
+    document.documentElement.lang = state.lang;
+    document.querySelectorAll("[data-i18n]").forEach(x => { x.textContent = t(x.dataset.i18n); });
+    svg.setAttribute("aria-label", t("svg"));
+    document.getElementById("chapters").setAttribute("aria-label", t("chapters"));
+    document.getElementById("g-view").setAttribute("aria-label", t("view"));
+    document.getElementById("g-lang").setAttribute("aria-label", t("lang"));
+    [["z-in", "zin"], ["z-out", "zout"], ["z-fit", "fitT"], ["z-full", "full"]].forEach(([id, k]) => { const b = document.getElementById(id); b.title = t(k); b.setAttribute("aria-label", t(k)); });
+  }
+
+  // ---------- Zustand anwenden ----------
+  let visEdges = [], loops = [];
+  function apply() {
+    document.getElementById("stage").classList.toggle("diff", state.view === "diff");
+    nodeEls.forEach(({ n, g }) => {
+      g.style.display = nodeOn(n) ? "" : "none";
+      g.classList.toggle("fresh", state.chapter > 0 && n.chapter === state.chapter);
+    });
+    visEdges = [];
+    edgeEls.forEach(o => {
+      const on = edgeOn(o.e); o.path.style.display = o.lab.style.display = on ? "" : "none";
+      if (!on) return;
+      visEdges.push(o.e);
+      const st = o.e.status, chg = st === "Geändert" && o.e.art === "Kausal";
+      o.path.classList.toggle("new", st === "Neu");
+      o.path.classList.toggle("gone", st === "Entfernen");
+      o.path.classList.toggle("chg", chg);
+      o.path.classList.toggle("keep", st === "Bestehend" || (st === "Geändert" && !chg));
+      o.lab.classList.toggle("keep", st === "Bestehend");
+      const old = state.chapter > 0 && o.e.chapter < state.chapter;
+      o.path.classList.toggle("old", old); o.lab.classList.toggle("old", old);
+    });
+    loops = findLoops(visEdges.filter(causal), 12);
+    if (state.sel && !nodeOn(byId[state.sel])) state.sel = null;
+    if (state.loop && !loopAvailable(state.loop)) state.loop = null;
+    renderTexts(); highlight();
+  }
+  function renderTexts() {
+    const nv = DATA.nodes.filter(nodeOn).length, r = loops.filter(l => l.type === "R").length;
+    document.getElementById("meta").textContent = t("meta")(DATA.generated, nv, visEdges.length, loops.length, r);
+    renderSteps(); renderCaption(); renderSide();
+  }
+
+  // ---------- Hervorheben ----------
+  let hovered = null;
+  function hover(id) { hovered = id; highlight(); }
+  function highlight() {
+    const hotN = new Set(), hotE = new Set();
+    const focusId = hovered || state.sel;
+    svg.classList.remove("loopmode");
+    if (state.loop && !hovered) {
+      state.loop.nodes.forEach(n => hotN.add(n)); state.loop.edges.forEach(e => hotE.add(e)); svg.classList.add("loopmode");
+    } else if (focusId) {
+      hotN.add(focusId);
+      visEdges.forEach(e => { if (e.src === focusId || e.dst === focusId) { hotE.add(e); hotN.add(e.src); hotN.add(e.dst); } });
+    }
+    svg.classList.toggle("focus", hotN.size > 0);
+    nodeEls.forEach(({ n, g }) => { g.classList.toggle("hot", hotN.has(n.id)); g.classList.toggle("sel", state.sel === n.id); });
+    edgeEls.forEach(o => { const h = hotE.has(o.e); o.path.classList.toggle("hot", h); o.lab.classList.toggle("hot", h); });
+  }
+
+  // ---------- Kapitel ----------
+  function renderSteps() {
+    const s = document.getElementById("steps"); s.textContent = "";
+    const mk = (n, txt, title) => { const b = document.createElement("button"); b.textContent = txt; b.title = title; b.className = n === 0 ? "step-all" : ""; b.setAttribute("aria-pressed", String(state.chapter === n)); b.onclick = () => { state.chapter = n; state.loop = null; apply(); }; s.appendChild(b); };
+    mk(0, t("all"), t("allT"));
+    DATA.chapters.forEach(c => mk(c.n, String(c.n), `${t("chap")} ${c.n}: ${L(c.title, c.title_en)}`));
+  }
+  function renderCaption() {
+    const cap = document.getElementById("cap");
+    if (!state.chapter) { cap.innerHTML = t("capAll"); return; }
+    const c = chapterOf[state.chapter];
+    const fresh = DATA.nodes.filter(n => nodeOn(n) && n.chapter === c.n).length;
+    cap.innerHTML = `<b>${t("chap")} ${c.n} · ${esc(L(c.title, c.title_en))}</b> <span class="q">· ${esc(L(c.question, c.question_en))}</span>
+      <div class="aha"><b>AHA:</b> ${esc(L(c.aha, c.aha_en))}</div>
+      <div class="meta">${t("levers")}: ${esc(nodeList(c.levers) || "–")}${c.event ? ` · ${t("event")}: ${esc(nodeList(c.event))}` : ""}${c.cbm ? ` · ${t("cbm")}: ${esc(c.cbm)}` : ""} · ${t("fresh")(fresh)}</div>`;
+  }
+
+  // ---------- Detailspalte ----------
+  function keyLoop(kl) {
+    const nodes = kl.nodes, edges = [];
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i], b = nodes[(i + 1) % nodes.length];
+      const e = visEdges.find(x => x.src === a && x.dst === b && causal(x));
+      if (!e) return null;
+      edges.push(e);
+    }
+    return { id: "k:" + kl.name, kl, nodes, edges, type: edges.filter(e => minus(e.pol)).length % 2 ? "B" : "R" };
+  }
+  function loopAvailable(l) { return l.edges.every(e => visEdges.includes(e)); }
+  function chainHTML(l) {
+    let h = "";
+    l.nodes.forEach((n, i) => { const e = l.edges[i]; h += `${esc(label(byId[n]))} <span class="s ${minus(e.pol) ? "m" : "p"}">${minus(e.pol) ? "−→" : "+→"}</span> `; });
+    return h + esc(label(byId[l.nodes[0]]));
+  }
+  function loopItem(l, name, sub) {
+    const pressed = !!(state.loop && state.loop.id === l.id);
+    return `<li><button data-loop="${esc(l.id)}" aria-pressed="${pressed}"><span class="lt ${l.type}">${l.type}</span><span class="nm">${esc(name)}<span class="chain">${sub}</span></span><span class="len">${l.nodes.length}</span></button></li>`;
+  }
+  const legendSVG = inner => `<svg width="46" height="22" viewBox="0 0 46 22" aria-hidden="true">${inner}</svg>`;
+  const LEG = [
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--lever);stroke:var(--lever-edge)"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--lever);stroke:var(--prereq);stroke-width:2.4"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--surface);stroke:var(--fg);stroke-width:1.9"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="8" style="fill:var(--surface);stroke:var(--line-strong)"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--event-bg);stroke:var(--minus);stroke-width:1.5"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--surface);stroke:var(--line-strong);stroke-dasharray:5 3"/>`,
+    `<path d="M2 11 H38" style="stroke:var(--plus);stroke-width:1.5"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--plus)"/>`,
+    `<path d="M2 11 H38" style="stroke:var(--minus);stroke-width:1.5"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--minus)"/>`,
+    `<path d="M2 11 H38" style="stroke:var(--plus);stroke-width:1.5;stroke-dasharray:6 4"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--plus)"/>`,
+    `<path d="M2 11 H38" style="stroke:var(--prereq);stroke-width:1.6;stroke-dasharray:2 4"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--prereq)"/>`
+  ];
+
+  let sideLoops = [];
+  function renderSide() {
+    if (state.sel) return renderNode(byId[state.sel]);
+    const r = loops.filter(l => l.type === "R").length;
+    const kls = DATA.keyLoops.map(kl => ({ kl, l: keyLoop(kl) }));
+    sideLoops = kls.map(x => x.l).filter(Boolean);
+    side.innerHTML = `
+      <h2>${t("overview")}</h2>
+      <div class="stats">
+        <div class="stat"><div class="n">${DATA.nodes.filter(nodeOn).length}</div><div class="l">${t("vars")}</div></div>
+        <div class="stat"><div class="n">${visEdges.length}</div><div class="l">${t("rels")}</div></div>
+        <div class="stat"><div class="n">${loops.length}</div><div class="l">${t("loops")}</div><div class="sub">${r} R · ${loops.length - r} B</div></div>
+      </div>
+      <h3>${t("keyLoops")}</h3>
+      <ul class="loops">${kls.map(({ kl, l }) => l
+        ? loopItem(l, L(kl.name, kl.name_en), esc(L(kl.note, kl.note_en)))
+        : `<li><button disabled><span class="lt">·</span><span class="nm">${esc(L(kl.name, kl.name_en))}<span class="chain">${t("incomplete")}</span></span><span></span></button></li>`).join("")}</ul>
+      <h3>${t("legend")}</h3>
+      <div class="legend">${LEG.map((g, i) => legendSVG(g) + `<span>${t("lg")[i]}</span>`).join("")}</div>
+      <p class="note" style="margin-top:12px">${t("note1")}</p>
+      <p class="note">${t("note2")}</p>`;
+    bindLoopButtons();
+  }
+
+  function renderNode(n) {
+    const outs = visEdges.filter(e => e.src === n.id), ins = visEdges.filter(e => e.dst === n.id);
+    const mine = loops.filter(l => l.nodes.includes(n.id)).sort((a, b) => a.nodes.length - b.nodes.length);
+    const shown = mine.slice(0, 12).map((l, i) => { const k = l.nodes.indexOf(n.id); return { ...l, id: `n:${n.id}:${i}`, nodes: l.nodes.slice(k).concat(l.nodes.slice(0, k)), edges: l.edges.slice(k).concat(l.edges.slice(0, k)) }; });
+    sideLoops = shown;
+    const rel = (e, other) => {
+      const k = e.art === "Voraussetzung" ? "v" : minus(e.pol) ? "m" : "p";
+      const desc = L(e.desc_de, e.desc), reason = L(e.reason, e.reason_en);
+      return `<li><span class="pol ${k}">${k === "v" ? "V" : minus(e.pol) ? "−" : "+"}</span><div>
+        <button class="who" data-sel="${esc(other)}">${esc(label(byId[other]))}</button>
+        ${e.status !== "Bestehend" ? ` <span class="chip st-${esc(e.status)}">${esc(en(e.status))}</span>` : ""}
+        <div class="d">${esc(desc)}${e.strength ? ` · ${t("strength")}: ${esc(en(e.strength))}` : ""}${e.delay ? ` · ${t("delay")}: ${esc(en(e.delay))}` : ""}</div>
+        ${reason ? `<div class="r">${esc(reason)}</div>` : ""}</div></li>`;
+    };
+    const other = state.lang === "de" ? n.en : n.de;
+    const comment = L(n.comment, n.comment_en);
+    side.innerHTML = `
+      <button class="back" id="back">${t("back")}</button>
+      <h2>${esc(label(n))}</h2>
+      <div class="note">${esc(other)}</div>
+      <div class="chips"><span class="chip">${esc(en(n.area))}</span><span class="chip">${esc(en(n.type))}</span><span class="chip">${t("chap")} ${n.chapter}</span><span class="chip st-${esc(n.status)}">${esc(en(n.status))}</span></div>
+      ${comment ? `<p class="note">${esc(comment)}</p>` : ""}
+      <h3>${t("affects")} (${outs.length})</h3>
+      ${outs.length ? `<ul class="rel">${outs.map(e => rel(e, e.dst)).join("")}</ul>` : `<p class="note">${t("noOut")}</p>`}
+      <h3>${t("affected")} (${ins.length})</h3>
+      ${ins.length ? `<ul class="rel">${ins.map(e => rel(e, e.src)).join("")}</ul>` : `<p class="note">${t("noIn")(n.type)}</p>`}
+      <h3>${t("loopsThrough")} (${mine.length})</h3>
+      ${mine.length ? `<ul class="loops">${shown.map(l => loopItem(l, `${t(l.type)} · ${t("nVars")(l.nodes.length)}`, chainHTML(l))).join("")}</ul>${mine.length > 12 ? `<p class="note" style="margin-top:6px">${t("shortest")}</p>` : ""}` : `<p class="note">${t("noLoop")}</p>`}`;
+    document.getElementById("back").onclick = () => { state.sel = null; state.loop = null; highlight(); renderSide(); };
+    side.querySelectorAll("[data-sel]").forEach(b => b.onclick = () => select(b.dataset.sel));
+    bindLoopButtons();
+  }
+
+  function bindLoopButtons() {
+    side.querySelectorAll(".loops button[data-loop]").forEach(b => {
+      b.onclick = () => {
+        const l = sideLoops.find(x => x.id === b.dataset.loop); if (!l) return;
+        state.loop = state.loop && state.loop.id === l.id ? null : l;
+        side.querySelectorAll(".loops button[data-loop]").forEach(x => x.setAttribute("aria-pressed", String(!!state.loop && x.dataset.loop === state.loop.id)));
+        highlight();
+      };
+    });
+  }
+
+  function select(id) {
+    state.sel = id; state.loop = null; hovered = null;
+    highlight(); renderSide(); side.scrollTop = 0;
+  }
+
+  // ---------- Zoom & Verschieben ----------
+  const vb = { x: 0, y: 0, w: W, h: H };
+  const setVB = () => svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  function fit() { vb.x = -10; vb.y = 20; vb.w = W + 20; vb.h = H - 10; setVB(); }
+  function toSvg(cx, cy) { const p = svg.createSVGPoint(); p.x = cx; p.y = cy; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+  function zoomAt(f, cx, cy) {
+    const nw = Math.min(W * 1.6, Math.max(W / 10, vb.w * f)); f = nw / vb.w;
+    vb.x = cx - (cx - vb.x) * f; vb.y = cy - (cy - vb.y) * f; vb.w *= f; vb.h *= f; setVB();
+  }
+  svg.addEventListener("wheel", ev => { ev.preventDefault(); const p = toSvg(ev.clientX, ev.clientY); zoomAt(Math.exp(ev.deltaY * 0.0015), p.x, p.y); }, { passive: false });
+  let drag = null, dragMoved = false;
+  svg.addEventListener("pointerdown", ev => { drag = { x: ev.clientX, y: ev.clientY, p: toSvg(ev.clientX, ev.clientY), id: ev.pointerId }; dragMoved = false; });
+  svg.addEventListener("pointermove", ev => {
+    if (!drag) return;
+    if (!dragMoved && Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 4) { dragMoved = true; svg.classList.add("dragging"); svg.setPointerCapture(drag.id); }
+    if (!dragMoved) return;
+    const p = toSvg(ev.clientX, ev.clientY); vb.x -= p.x - drag.p.x; vb.y -= p.y - drag.p.y; setVB();
+  });
+  const end = () => { drag = null; svg.classList.remove("dragging"); setTimeout(() => (dragMoved = false), 0); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+  svg.addEventListener("click", () => { if (dragMoved) return; if (state.sel || state.loop) { state.sel = null; state.loop = null; highlight(); renderSide(); } });
+  const center = () => [vb.x + vb.w / 2, vb.y + vb.h / 2];
+  document.getElementById("z-in").onclick = () => zoomAt(0.75, ...center());
+  document.getElementById("z-out").onclick = () => zoomAt(1 / 0.75, ...center());
+  document.getElementById("z-fit").onclick = fit;
+  document.getElementById("z-full").onclick = () => {
+    const st = document.getElementById("stage");
+    if (document.fullscreenElement) document.exitFullscreen?.(); else st.requestFullscreen?.().catch(() => {});
+  };
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape" && (state.sel || state.loop)) { state.sel = null; state.loop = null; highlight(); renderSide(); } });
+
+  // ---------- Bedienelemente ----------
+  document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => {
+    state.view = b.dataset.view; state.loop = null;
+    document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); apply();
+  });
+  function setLang(l) {
+    state.lang = l; try { localStorage.setItem("circulus-lang", l); } catch (e) {}
+    document.querySelectorAll("[data-lang]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.lang === l)));
+    staticTexts(); drawLabels(); renderTexts();
+  }
+  document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => setLang(b.dataset.lang));
+
+  fit(); setLang(state.lang); apply();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLabels);
+})();
+</script>
+
+</html>

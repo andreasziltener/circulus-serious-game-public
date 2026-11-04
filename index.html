@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circulus Serious Game</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+:root { --bg: #F3F5F4; --surface: #FFFFFF; --fg: #17232A; --muted: #5B6B72; --line: #D3DBDD; --accent: #0B7A88; }
+@media (prefers-color-scheme: dark) { :root { --bg: #111719; --surface: #1A2327; --fg: #E5ECEE; --muted: #95A5AC; --line: #2C393E; --accent: #3CC3D3; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; line-height: 1.5; }
+main { max-width: 760px; margin: 0 auto; padding: 56px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px)); }
+h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+p.lead { color: var(--muted); margin: 0 0 32px; font-size: 17px; }
+.cards { display: grid; gap: 14px; }
+a.card { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; color: inherit; text-decoration: none; }
+a.card:hover, a.card:focus-visible { border-color: var(--accent); outline: none; }
+a.card b { display: block; font-size: 18px; color: var(--accent); margin-bottom: 4px; }
+a.card span { color: var(--muted); }
+footer { margin-top: 36px; font-size: 13px; color: var(--muted); }
+</style>
+<main>
+  <h1>Circulus Serious Game</h1>
+  <p class="lead">Ein Serious Game über die Transformation eines Industrieunternehmens zur Kreislaufwirtschaft.</p>
+  <div class="cards">
+    <a class="card" href="systemkarte.html"><b>Systemkarte</b><span>Interaktives Causal Loop Diagram des Gesamtsystems mit Kapitel-Schritten, zentralen Kreisläufen und DE/EN-Umschaltung.</span></a>
+    <a class="card" href="storyline.html"><b>Storyline</b><span>Acht Kapitel vom Pilot zur Transformation mit Entscheidungen, AHA-Erlebnissen und CLD-Logik.</span></a>
+  </div>
+  <footer>Arbeitsstand, Entwurf.</footer>
+</main>
+</html>
