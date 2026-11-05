@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circulus Testlauf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F3F5F4; --surface: #FFFFFF; --fg: #17232A; --muted: #5B6B72; --line: #D3DBDD; --grid: #E7ECED;
+  --accent: #0B7A88; --ok: #1F7A3A; --ok-bg: #E3F1E6; --bad: #B5432D; --bad-bg: #F8E3DD;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --font-ui: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111719; --surface: #1A2327; --fg: #E5ECEE; --muted: #95A5AC; --line: #2C393E; --grid: #243034;
+  --accent: #3CC3D3; --ok: #6FCF8A; --ok-bg: #1B3324; --bad: #FF8C70; --bad-bg: #3A2019;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #111719; --surface: #1A2327; --fg: #E5ECEE; --muted: #95A5AC; --line: #2C393E; --grid: #243034;
+  --accent: #3CC3D3; --ok: #6FCF8A; --ok-bg: #1B3324; --bad: #FF8C70; --bad-bg: #3A2019;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+h2 { font-size: 16px; font-weight: 600; margin: 36px 0 4px; }
+.sub { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+p.lead { color: var(--muted); margin: 0 0 14px; max-width: 75ch; font-size: 13.5px; }
+.bar { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 0; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin-top: 16px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; border: 0; background: none; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-right: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.strat { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
+.strat div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: var(--muted); }
+.strat b { display: flex; align-items: center; gap: 7px; color: var(--fg); font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+.strat i { width: 14px; height: 3px; border-radius: 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.grid.big { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px 6px; position: relative; }
+.card h3 { margin: 0; font-size: 13.5px; font-weight: 600; }
+.card .hint { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+svg.chart { width: 100%; height: auto; max-height: 260px; display: block; overflow: visible; }
+svg.chart text { font-family: var(--font-ui); font-size: 10.5px; fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12px; padding: 6px 8px; border-radius: 6px; white-space: nowrap; z-index: 3; display: none; font-variant-numeric: tabular-nums; }
+.tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; }
+td.num { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); }
+.scroll { overflow-x: auto; }
+select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--fg); }
+ul.notes { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+ul.notes li { margin: 2px 0; }
+details { margin-top: 10px; }
+summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Circulus Rechenkern: Testlauf</h1>
+  <p class="sub" id="meta"></p>
+  <p class="lead" style="margin-top:12px">Fünf Teststrategien werden über zehn Jahre automatisch durchgespielt, im ruhigen Umfeld und in Krisenjahren. So sehen wir, ob das Modell plausibel rechnet und ob die AHA-Erlebnisse der Storyline von selbst entstehen. Alle Grössen laufen auf der Skala 0–100; ohne Entscheidungen bleibt das System im Gleichgewicht.</p>
+
+  <div class="bar">
+    <div><span class="lbl">Szenario</span><span class="seg" id="szen"></span></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="strat" id="strat"></div>
+
+  <h2>Ergebnisgrössen</h2>
+  <p class="lead">Marge, CO2 und Resilienz (Entscheid Q14). Bei CO2 ist tiefer besser.</p>
+  <div class="grid big" id="ergebnis"></div>
+
+  <h2>Prüfung der AHA-Erlebnisse</h2>
+  <p class="lead">Erwartungen aus Storyline und Interviews, automatisch gemessen. Eine nicht erfüllte Erwartung heisst: Modell oder Parameter prüfen, oder die Erwartung ist falsch.</p>
+  <div class="scroll"><table id="checks"></table></div>
+
+  <h2>Weitere Grössen</h2>
+  <div class="grid" id="weitere"></div>
+
+  <h2>Variable ansehen</h2>
+  <p class="lead">Verlauf einer beliebigen Variablen und was sie am Ende von Jahr 10 antreibt (Beitrag zum Zielwert).</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px">
+    <select id="varsel" aria-label="Variable"></select>
+    <select id="stratsel" aria-label="Strategie für die Treiber"></select>
+  </div>
+  <div class="grid big"><div id="varchart"></div><div class="scroll"><table id="treiber"></table></div></div>
+
+  <h2>Auffälligkeiten</h2>
+  <ul class="notes" id="notes"></ul>
+
+  <h2>Rechenregeln (Version <span id="ver"></span>)</h2>
+  <ul class="notes">
+    <li>Eine Runde ist ein Jahr mit vier Quartalen. Pro Jahr öffnet sich ein Kapitel; Hebel und Wirkungen gelten erst ab ihrem Kapitel.</li>
+    <li>Zielwert einer Variablen = Startwert + Σ Gewicht × Polarität × (Wert der Ursache vor der Verzögerung − deren Startwert).</li>
+    <li>Gewicht: schwach 0.1, mittel 0.2, stark 0.35. Ein Hebel auf «Ja» steht auf 80. Verzögerung in Quartalen: keine/kurz 1, mittel 3, lang 6.</li>
+    <li>Indikatoren gehen pro Quartal halb, Zustände zu 15 % auf ihren Zielwert zu. Zum Rand der Skala hin werden Wirkungen weich gesättigt (tanh), Werte bleiben zwischen 0 und 100.</li>
+    <li>Das Budget (Investition in Zirkularität) ist nach oben begrenzt: Start 30, mehr mit Cashflow, Management Support und Anschubfonds.</li>
+    <li>Ereigniskarten verschieben ihre Variable ein Jahr lang um 40 Punkte.</li>
+    <li>Alle Parameter stehen in <code>spiel/parameter.js</code> und sind erste Annahmen, keine kalibrierten Werte.</li>
+  </ul>
+</main>
+
+<script>/*
+ * Circulus – Parameter des Rechenkerns (Version 0.1, erste Kalibrierung)
+ *
+ * Alles, was die Zahlen im Spiel bestimmt und nicht im Excel steht, ist hier gesammelt.
+ * Das Excel liefert Startwerte, Polaritäten, Stärke (schwach/mittel/stark) und Verzögerung.
+ * Diese Datei übersetzt die Wörter in Zahlen und legt die Optionen der Hebel fest.
+ */
+(function (root) {
+  "use strict";
+  const P = {
+    version: "0.1",
+    schritteProRunde: 4,            // 1 Runde = 1 Jahr = 4 Quartale
+    runden: 10,
+    kapitelProRunde: [1, 2, 3, 4, 5, 6, 7, 8, 8, 8], // Storyline: ein Kapitel pro Jahr
+
+    // Wirkung pro Punkt Abweichung der Ursache vom Startwert
+    gewicht: { schwach: 0.1, mittel: 0.2, stark: 0.35 },
+    // Verzögerung in Quartalen
+    verzoegerung: { keine: 1, kurz: 1, mittel: 3, lang: 6 },
+    // Wie schnell eine Variable pro Quartal auf ihren Zielwert zugeht (1 = sofort)
+    anpassung: { Indikator: 0.5, Zustand: 0.15 },
+    // Wirkungen zum Rand hin weich sättigen (tanh) statt hart bei 0 und 100 abschneiden
+    weicheSaettigung: true,
+
+    // Voraussetzungen (z. B. B1 und B2 → C): die Ursache muss mindestens diesen Wert haben
+    voraussetzungSchwelle: 50,
+
+    // Hebel mit eingehenden Wirkungen: Spieler:in wählt, das System begrenzt.
+    // Obergrenze = Start + Summe der Wirkungen (z. B. Budget hängt an Cashflow und Management Support)
+    obergrenze: {
+      "Investment in Circularity": 30,
+      "Upgrade in the Field": 20,
+    },
+
+    // Ereigniskarten: Ausschlag auf die Variable und Dauer in Runden
+    karte: { ausschlag: 40, dauerRunden: 1 },
+
+    // Optionen der Hebel (Spalte «Entscheidungsform (Spiel)»). Erste Option = Ausgangslage.
+    // «regler: true» = stufenlos 0–100.
+    hebel: {
+      "Marketing": [["sachlich mit Daten", 50], ["zurückhaltend", 30], ["als «grün» vermarkten", 75]],
+      "Price": [["halten", 50], ["senken", 35], ["erhöhen", 65]],
+      "Investment in Circularity": { regler: true },
+      "Recycling": "janein",
+      "A Machine Repair": "janein",
+      "B1 Component Circulation": "janein",
+      "B2 Machine Circulation": "janein",
+      "C Combined M&C Flows": "janein",
+      "D Pay-per-use": "janein",
+      "Scaling Investment": [["nicht freigeben", 0], ["stufenweise mit Frist", 50], ["voll freigeben", 100]],
+      "Seed Funding": [["kein eigener Topf", 0], ["interner Fonds mit Frist", 70], ["Mehrkosten zentral übernehmen", 100]],
+      "Cross-functional Team": [["kein Team", 0], ["Stabsstelle beim CEO", 50], ["dezentrale Gruppe", 80]],
+      "Partner Integration": "janein",
+      "KPI System": [["nur finanziell", 0], ["kombiniert", 80]],
+      "Circular Product Design": [["keine Vorgaben", 0], ["Richtlinien", 50], ["Gate im Entwicklungsprozess", 80]],
+      "Anchoring": { mehrfach: [["Nachfolge regeln", 30], ["CE-Kriterien in Gates", 30], ["Ziele und Bonus koppeln", 30]] },
+      "Sales & Service Partner Involvement": [["bewusst ausschliessen", 0], ["einbinden", 80]],
+      "Upgrade in the Field": "janein",
+      "Refurbished Positioning": [["keine", 0], ["günstiger als neu", 30], ["gleich teuer", 60], ["Rebranding als Qualitätsprodukt", 90]],
+    },
+    janein: [["Nein", 0], ["Ja", 80]],
+
+    // Ergebnisgrössen (Entscheid Q14): Marge, CO2, Resilienz
+    ergebnis: [
+      { name: "Cashflow", label: "Marge (Cashflow)", besser: 1 },
+      { name: "CO2", label: "CO2-Emissionen", besser: -1 },
+      { name: "Resilience", label: "Resilienz", besser: 1 },
+    ],
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = P;
+  else root.CIRCULUS_PARAMETER = P;
+})(typeof self !== "undefined" ? self : this);
+</script>
+<script>/*
+ * Circulus – Rechenkern (Version 0.1)
+ *
+ * Übersetzt das Causal Loop Diagram in eine Simulation mit Runden (Jahre) und Schritten (Quartale).
+ *
+ * Rechenregel pro Quartal, für jede Variable, die im aktuellen Kapitel aktiv ist:
+ *   Ziel = Startwert + Σ Gewicht × Polarität × (Ursache vor «Verzögerung» Quartalen − Startwert der Ursache)
+ *                    + Ausschlag aktiver Ereigniskarten
+ *   Indikator / Zustand:  Wert += Anpassung × (Ziel − Wert)      (Zustände reagieren träger)
+ *   Hebel:                Wert = Wahl der Spieler:innen, ggf. begrenzt durch eine Obergrenze (z. B. Budget)
+ *   Ereignis / Extern:    Wert = Startwert + Ausschlag der Ereigniskarten
+ * Alle Werte bleiben zwischen 0 und 100; Wirkungen werden zum Rand hin weich gesättigt (tanh). Ohne Entscheidungen bleibt das System im Gleichgewicht.
+ *
+ * Läuft im Browser (global «Circulus») und in Node (module.exports).
+ */
+(function (root) {
+  "use strict";
+
+  const clamp = (x) => (x < 0 ? 0 : x > 100 ? 100 : x);
+  // Weiche Sättigung: Wirkungen werden zum Rand hin schwächer, statt hart bei 0 oder 100 abzuschneiden
+  function saettigen(start, summe, weich) {
+    if (!weich) return clamp(start + summe);
+    const raum = summe >= 0 ? 100 - start : start;
+    if (raum <= 0) return start;
+    return start + Math.sign(summe) * raum * Math.tanh(Math.abs(summe) / raum);
+  }
+
+  function vorbereiten(modell, P) {
+    const vars = modell.variablen.map((v, i) => ({ ...v, i, rein: [], voraus: [] }));
+    const idx = Object.fromEntries(vars.map((v) => [v.name, v.i]));
+    for (const b of modell.beziehungen) {
+      const ziel = vars[idx[b.nach]];
+      if (b.art === "Voraussetzung") { ziel.voraus.push(idx[b.von]); continue; }
+      ziel.rein.push({
+        id: b.id, von: idx[b.von], pol: b.pol, kapitel: b.kapitel,
+        w: P.gewicht[b.staerke] ?? P.gewicht.mittel,
+        lag: Math.max(1, P.verzoegerung[b.verzoegerung] ?? 1),
+      });
+    }
+    return { vars, idx };
+  }
+
+  function optionen(P, name) {
+    const h = P.hebel[name];
+    if (!h) return null;
+    if (h === "janein") return { art: "optionen", liste: P.janein };
+    if (h.regler) return { art: "regler" };
+    if (h.mehrfach) return { art: "mehrfach", liste: h.mehrfach };
+    return { art: "optionen", liste: h };
+  }
+
+  function neuesSpiel(modell, P) {
+    const { vars, idx } = vorbereiten(modell, P);
+    const start = Float64Array.from(vars, (v) => v.start);
+    const wahl = {};
+    for (const v of vars) {
+      if (v.typ !== "Hebel") continue;
+      const o = optionen(P, v.name);
+      wahl[v.name] = o && o.art === "optionen" ? o.liste[0][1] : o && o.art === "mehrfach" ? 0 : v.start;
+    }
+    return {
+      modell, P, vars, idx, start, wahl,
+      verlauf: [Float64Array.from(start)],   // ein Eintrag pro Quartal, Index 0 = Start
+      runde: 0, karten: [], log: [],
+      kapitel: P.kapitelProRunde[0],
+    };
+  }
+
+  const wert = (s, name, t = s.verlauf.length - 1) => s.verlauf[Math.max(0, Math.min(t, s.verlauf.length - 1))][s.idx[name]];
+
+  function verfuegbar(s, name) {
+    const v = s.vars[s.idx[name]];
+    if (!v || v.typ !== "Hebel") return { ok: false, grund: "kein Hebel" };
+    if (v.kapitel > s.kapitel) return { ok: false, grund: `ab Kapitel ${v.kapitel}` };
+    const fehlt = v.voraus.filter((j) => wert(s, s.vars[j].name) < s.P.voraussetzungSchwelle).map((j) => s.vars[j].name);
+    if (fehlt.length) return { ok: false, grund: "braucht zuerst: " + fehlt.join(", ") };
+    return { ok: true };
+  }
+
+  // auswahl: Optionstext, Zahl (Regler) oder Liste von Optionstexten (Mehrfachwahl)
+  function entscheide(s, name, auswahl) {
+    const ok = verfuegbar(s, name);
+    if (!ok.ok) { s.log.push({ runde: s.runde + 1, typ: "abgelehnt", hebel: name, grund: ok.grund }); return false; }
+    const o = optionen(s.P, name);
+    let w;
+    if (typeof auswahl === "number") w = auswahl;
+    else if (Array.isArray(auswahl)) w = auswahl.reduce((a, t) => a + (o.liste.find((x) => x[0] === t)?.[1] ?? 0), 0);
+    else w = o?.liste?.find((x) => x[0] === auswahl)?.[1];
+    if (w === undefined) throw new Error(`Unbekannte Option «${auswahl}» für ${name}`);
+    s.wahl[name] = clamp(w);
+    s.log.push({ runde: s.runde + 1, typ: "entscheid", hebel: name, auswahl });
+    return true;
+  }
+
+  function zieheKarte(s, kartenName) {
+    const k = s.modell.karten.find((x) => x.name === kartenName);
+    if (!k) throw new Error("Unbekannte Karte " + kartenName);
+    const t0 = s.verlauf.length;
+    s.karten.push({ ...k, i: s.idx[k.variable], delta: k.richtung * s.P.karte.ausschlag,
+                    bis: t0 + s.P.karte.dauerRunden * s.P.schritteProRunde });
+    s.log.push({ runde: s.runde + 1, typ: "karte", karte: k.name });
+  }
+
+  // Beitrag jeder eingehenden Wirkung zum Ziel einer Variablen (für Auswertung und Erklärung)
+  function beitraege(s, name, t = s.verlauf.length - 1) {
+    const v = s.vars[s.idx[name]];
+    return v.rein.filter((e) => e.kapitel <= s.kapitel).map((e) => ({
+      id: e.id, von: s.vars[e.von].name,
+      beitrag: e.w * e.pol * (s.verlauf[Math.max(0, t - e.lag)][e.von] - s.start[e.von]),
+    })).sort((a, b) => Math.abs(b.beitrag) - Math.abs(a.beitrag));
+  }
+
+  function schritt(s) {
+    const t = s.verlauf.length, alt = s.verlauf[t - 1], neu = new Float64Array(alt.length);
+    const extern = new Float64Array(alt.length);
+    for (const k of s.karten) if (t < k.bis) extern[k.i] += k.delta;
+    for (const v of s.vars) {
+      if (v.kapitel > s.kapitel) { neu[v.i] = s.start[v.i]; continue; }
+      let summe = extern[v.i];
+      for (const e of v.rein) {
+        if (e.kapitel > s.kapitel) continue;
+        summe += e.w * e.pol * (s.verlauf[Math.max(0, t - e.lag)][e.von] - s.start[e.von]);
+      }
+      if (v.typ === "Hebel") {
+        const w = s.wahl[v.name] ?? v.start, cap = s.P.obergrenze[v.name];
+        neu[v.i] = cap === undefined ? w : Math.min(w, clamp(cap + summe));
+      } else if (v.typ === "Ereignis" || v.typ === "Extern") {
+        neu[v.i] = clamp(v.start + extern[v.i]);
+      } else {
+        const ziel = saettigen(v.start, summe, s.P.weicheSaettigung), a = s.P.anpassung[v.typ] ?? 0.5;
+        neu[v.i] = alt[v.i] + a * (ziel - alt[v.i]);
+      }
+    }
+    s.verlauf.push(neu);
+  }
+
+  function spieleRunde(s) {
+    s.kapitel = s.P.kapitelProRunde[Math.min(s.runde, s.P.kapitelProRunde.length - 1)];
+    for (let q = 0; q < s.P.schritteProRunde; q++) schritt(s);
+    s.runde += 1;
+    s.kapitel = s.P.kapitelProRunde[Math.min(s.runde, s.P.kapitelProRunde.length - 1)];
+  }
+
+  // Strategie: { entscheide: { runde: { Hebel: Auswahl } } },  Szenario: { karten: { runde: [Kartenname] } }
+  function simuliere(modell, P, strategie, szenario = {}) {
+    const s = neuesSpiel(modell, P);
+    for (let r = 1; r <= P.runden; r++) {
+      s.kapitel = P.kapitelProRunde[Math.min(r - 1, P.kapitelProRunde.length - 1)];
+      for (const [h, a] of Object.entries(strategie.entscheide?.[r] || {})) entscheide(s, h, a);
+      for (const k of szenario.karten?.[r] || []) zieheKarte(s, k);
+      spieleRunde(s);
+    }
+    return s;
+  }
+
+  const api = { neuesSpiel, optionen, verfuegbar, entscheide, zieheKarte, spieleRunde, simuliere, wert, beitraege };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.Circulus = api;
+})(typeof self !== "undefined" ? self : this);
+</script>
+<script>/*
+ * Circulus – Teststrategien und Szenarien für den Rechenkern
+ * Jede Strategie legt fest, in welcher Runde (Jahr) welcher Hebel wie gestellt wird.
+ * Ein Hebel ist erst ab seinem Kapitel wählbar (Kapitel 1 = Jahr 1 usw.).
+ */
+(function (root) {
+  "use strict";
+  const strategien = [
+    {
+      key: "abwarten", name: "Abwarten",
+      beschreibung: "Keine Entscheidungen, das lineare Geschäft läuft weiter.",
+      entscheide: {},
+    },
+    {
+      key: "recycling", name: "Nur Recycling",
+      beschreibung: "Ab Jahr 2 Recycling, sonst nichts.",
+      entscheide: { 2: { "Recycling": "Ja" } },
+    },
+    {
+      key: "refurb", name: "Refurbishment schnell",
+      beschreibung: "Sofort Budget, ab Jahr 2 Reparatur und Komponentenkreislauf, ab Jahr 5 Produktkreislauf. Keine Organisation.",
+      entscheide: {
+        1: { "Investment in Circularity": 40 },
+        2: { "A Machine Repair": "Ja", "B1 Component Circulation": "Ja" },
+        4: { "Refurbished Positioning": "gleich teuer" },
+        5: { "B2 Machine Circulation": "Ja" },
+      },
+    },
+    {
+      key: "organisation", name: "Organisation zuerst",
+      beschreibung: "Jahr 3 Team, Partner und Verankern, danach Refurbishment. Anschubfonds (Jahr 2–4) statt Budget aus dem Tagesgeschäft.",
+      entscheide: {
+        1: { "Investment in Circularity": 20 },
+        2: { "Seed Funding": "interner Fonds mit Frist", "B1 Component Circulation": "Ja" },
+        3: { "Cross-functional Team": "dezentrale Gruppe", "Partner Integration": "Ja", "Anchoring": ["Nachfolge regeln", "Ziele und Bonus koppeln"] },
+        4: { "Sales & Service Partner Involvement": "einbinden", "Refurbished Positioning": "Rebranding als Qualitätsprodukt", "A Machine Repair": "Ja" },
+        5: { "B2 Machine Circulation": "Ja", "Seed Funding": "kein eigener Topf" },
+      },
+    },
+    {
+      key: "voll", name: "Volle Transformation",
+      beschreibung: "Alle Hebel, sobald verfügbar: Budget, Fonds (Jahr 2–4), Organisation, Produktdesign, Pfade A → B → C → D, Skalierung (Jahr 7–8), KPI-System.",
+      entscheide: {
+        1: { "Investment in Circularity": 40, "Marketing": "als «grün» vermarkten" },
+        2: { "Seed Funding": "interner Fonds mit Frist", "Recycling": "Ja", "A Machine Repair": "Ja", "B1 Component Circulation": "Ja" },
+        3: { "Cross-functional Team": "dezentrale Gruppe", "Partner Integration": "Ja", "Anchoring": ["Nachfolge regeln", "CE-Kriterien in Gates", "Ziele und Bonus koppeln"] },
+        4: { "Sales & Service Partner Involvement": "einbinden", "Refurbished Positioning": "Rebranding als Qualitätsprodukt" },
+        5: { "B2 Machine Circulation": "Ja", "Seed Funding": "kein eigener Topf" },
+        6: { "Circular Product Design": "Gate im Entwicklungsprozess", "Upgrade in the Field": "Ja" },
+        7: { "C Combined M&C Flows": "Ja", "Scaling Investment": "stufenweise mit Frist", "Investment in Circularity": 20 },
+        8: { "D Pay-per-use": "Ja", "KPI System": "kombiniert" },
+        9: { "Scaling Investment": "nicht freigeben" },
+      },
+    },
+  ];
+
+  const szenarien = [
+    { key: "ruhig", name: "Ruhiges Umfeld", beschreibung: "Keine Ereigniskarten.", karten: {} },
+    {
+      key: "krise", name: "Krisenjahre",
+      beschreibung: "Jahr 4 Auftragseinbruch, Jahr 5 geht der Champion, Jahr 6 kündigt ein Lieferant ein Bauteil ab.",
+      karten: { 4: ["Auftragseinbruch, Entlassungen"], 5: ["Champion geht"], 6: ["Lieferant kündigt Bauteil ab"] },
+    },
+  ];
+
+  const api = { strategien, szenarien };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.CIRCULUS_STRATEGIEN = api;
+})(typeof self !== "undefined" ? self : this);
+</script>
+<script>
+"use strict";
+const MODELL = {"stand": "2026-11-05", "variablen": [{"name": "Marketing", "de": "Marketing & Kundenkommunikation", "bereich": "Wirtschaft", "typ": "Hebel", "start": 50.0, "kapitel": 1, "entscheidungsform": "Optionen: nicht kommunizieren / sachlich mit Daten / als «grün» vermarkten"}, {"name": "Price", "de": "Preis", "bereich": "Wirtschaft", "typ": "Hebel", "start": 50.0, "kapitel": 1, "entscheidungsform": "Optionen: senken / halten / erhöhen"}, {"name": "Customer Sustainability Affinity", "de": "Nachhaltigkeitsaffinität der Kunden", "bereich": "Wirtschaft", "typ": "Indikator", "start": 40.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Purchase Decision", "de": "Kaufentscheidung Neuprodukte", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Sales", "de": "Absatz Neuprodukte", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Production Volume", "de": "Produktionsvolumen", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Revenue", "de": "Umsatz", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Costs", "de": "Kosten", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Logistics Costs", "de": "Logistikkosten", "bereich": "Wirtschaft", "typ": "Indikator", "start": 30.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Cashflow", "de": "Cashflow / Liquidität", "bereich": "Wirtschaft", "typ": "Zustand", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Investment in Circularity", "de": "Investition in Zirkularität", "bereich": "Wirtschaft", "typ": "Hebel", "start": 10.0, "kapitel": 1, "entscheidungsform": "Regler: Budgetanteil (0–100)"}, {"name": "Customer Trust", "de": "Kundenvertrauen", "bereich": "Wirtschaft", "typ": "Zustand", "start": 60.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Installed Base", "de": "Installierte Basis", "bereich": "Wirtschaft", "typ": "Zustand", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Circular Market Volume", "de": "Zirkuläres Marktvolumen", "bereich": "Wirtschaft", "typ": "Indikator", "start": 5.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Service Quality", "de": "Servicequalität", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Connectivity of the Product", "de": "Konnektivität des Produkts", "bereich": "Wirtschaft", "typ": "Zustand", "start": 10.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Product Condition Analysis", "de": "Zustandsanalyse", "bereich": "Wirtschaft", "typ": "Indikator", "start": 10.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Triage of Circular Components", "de": "Triage zirkulärer Komponenten", "bereich": "Wirtschaft", "typ": "Indikator", "start": 10.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Reverse Logistic", "de": "Rücklogistik", "bereich": "Wirtschaft", "typ": "Indikator", "start": 10.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Return Volume", "de": "Rücklaufvolumen", "bereich": "Wirtschaft", "typ": "Indikator", "start": 5.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Return Quality", "de": "Rücklaufqualität", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Supply Chain Shock", "de": "Supply-Chain-Schock", "bereich": "Wirtschaft", "typ": "Ereignis", "start": 0.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Scouting", "de": "Scouting", "bereich": "Wirtschaft", "typ": "Indikator", "start": 0.0, "kapitel": 5, "entscheidungsform": null}, {"name": "Refurbishment", "de": "Refurbishment", "bereich": "Wirtschaft", "typ": "Indikator", "start": 0.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Supplier Collaboration", "de": "Lieferantenzusammenarbeit", "bereich": "Wirtschaft", "typ": "Indikator", "start": 20.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Customer Collaboration", "de": "Kundenzusammenarbeit", "bereich": "Wirtschaft", "typ": "Indikator", "start": 20.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Coordination of M&C Flows", "de": "Koordination Maschinen- & Komponentenflüsse", "bereich": "Wirtschaft", "typ": "Indikator", "start": 0.0, "kapitel": 7, "entscheidungsform": null}, {"name": "Recycling", "de": "Recycling", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 2, "entscheidungsform": "Ja / Nein"}, {"name": "Customer Acceptance of Circular Offers", "de": "Akzeptanz zirkulärer Angebote", "bereich": "Wirtschaft", "typ": "Zustand", "start": 20.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Preference for New Products", "de": "Präferenz für Neuprodukte", "bereich": "Wirtschaft", "typ": "Ereignis", "start": 0.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Development Effort", "de": "Entwicklungsaufwand", "bereich": "Wirtschaft", "typ": "Indikator", "start": 20.0, "kapitel": 6, "entscheidungsform": null}, {"name": "Scaling Investment", "de": "Skalierungsinvestition", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 7, "entscheidungsform": "Optionen: nicht freigeben / stufenweise mit Frist / voll freigeben"}, {"name": "A Machine Repair", "de": "A: Maschinenreparatur", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 2, "entscheidungsform": "Ja / Nein"}, {"name": "B1 Component Circulation", "de": "B1: Komponentenkreislauf", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 2, "entscheidungsform": "Ja / Nein"}, {"name": "B2 Machine Circulation", "de": "B2: Maschinenkreislauf", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 5, "entscheidungsform": "Ja / Nein"}, {"name": "C Combined M&C Flows", "de": "C: Kombinierte M&K-Flüsse", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 7, "entscheidungsform": "Ja / Nein (erst nach B1 und B2)"}, {"name": "D Pay-per-use", "de": "D: Pay-per-use", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 7, "entscheidungsform": "Ja / Nein (erst nach C)"}, {"name": "Strategic CE Focus", "de": "CE-Auslöser (Startprofil)", "bereich": "Organisation", "typ": "Extern", "start": 0.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Management Support", "de": "Management Support", "bereich": "Organisation", "typ": "Zustand", "start": 40.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Regulatory Pressure", "de": "Regulatorischer Druck", "bereich": "Organisation", "typ": "Ereignis", "start": 20.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Cross-functional Team", "de": "Cross-funktionales Team", "bereich": "Organisation", "typ": "Hebel", "start": 0.0, "kapitel": 3, "entscheidungsform": "Optionen: kein Team / Stabsstelle beim CEO / dezentrale Gruppe aus allen Abteilungen"}, {"name": "Partner Integration", "de": "Partnerintegration", "bereich": "Organisation", "typ": "Hebel", "start": 0.0, "kapitel": 3, "entscheidungsform": "Ja / Nein (externen Partner beiziehen)"}, {"name": "Buy-in", "de": "Buy-in", "bereich": "Organisation", "typ": "Zustand", "start": 30.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Transformation Capability", "de": "Transformationsfähigkeit", "bereich": "Organisation", "typ": "Zustand", "start": 20.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Complexity", "de": "Komplexität", "bereich": "Organisation", "typ": "Indikator", "start": 10.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Real Cases", "de": "Referenzfälle", "bereich": "Organisation", "typ": "Zustand", "start": 0.0, "kapitel": 7, "entscheidungsform": null}, {"name": "KPI System", "de": "KPI-System", "bereich": "Organisation", "typ": "Hebel", "start": 0.0, "kapitel": 8, "entscheidungsform": "Optionen: nur finanziell / kombiniert (Zirkularität, CO2, Service)"}, {"name": "Measurability", "de": "Messbarkeit", "bereich": "Organisation", "typ": "Indikator", "start": 10.0, "kapitel": 8, "entscheidungsform": null}, {"name": "Meaningfulness of Work", "de": "Sinnhaftigkeit der Arbeit", "bereich": "Sozial", "typ": "Indikator", "start": 50.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Job Certainty", "de": "Arbeitsplatzsicherheit", "bereich": "Sozial", "typ": "Indikator", "start": 50.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Employee Satisfaction", "de": "Mitarbeiterzufriedenheit", "bereich": "Sozial", "typ": "Zustand", "start": 60.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Labor Turnover Rate", "de": "Fluktuation", "bereich": "Sozial", "typ": "Indikator", "start": 10.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Productivity", "de": "Produktivität", "bereich": "Sozial", "typ": "Indikator", "start": 50.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Employer Brand", "de": "Arbeitgebermarke", "bereich": "Sozial", "typ": "Zustand", "start": 50.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Circular Product Design", "de": "Zirkuläres Produktdesign", "bereich": "Ökologie", "typ": "Hebel", "start": 0.0, "kapitel": 6, "entscheidungsform": "Optionen: keine Vorgaben / Richtlinien / Gate im Entwicklungsprozess"}, {"name": "Modularity of the Product", "de": "Modularität des Produkts", "bereich": "Ökologie", "typ": "Zustand", "start": 20.0, "kapitel": 6, "entscheidungsform": null}, {"name": "Circularity Compatibility of the Components", "de": "Zirkuläre Kompatibilität der Komponenten", "bereich": "Ökologie", "typ": "Zustand", "start": 10.0, "kapitel": 6, "entscheidungsform": null}, {"name": "Product Lifetime", "de": "Produktlebensdauer", "bereich": "Ökologie", "typ": "Indikator", "start": 50.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Material Circularity Index %", "de": "Material Circularity Index (MCI)", "bereich": "Ökologie", "typ": "Indikator", "start": 10.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Recovered Material Inflow", "de": "Rückgewonnener Materialzufluss", "bereich": "Ökologie", "typ": "Indikator", "start": 5.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Material Outflow", "de": "Materialabfluss (Abfall)", "bereich": "Ökologie", "typ": "Indikator", "start": 50.0, "kapitel": 1, "entscheidungsform": null}, {"name": "CO2", "de": "CO2-Emissionen", "bereich": "Ökologie", "typ": "Indikator", "start": 70.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Water and Energy", "de": "Wasser & Energie", "bereich": "Ökologie", "typ": "Indikator", "start": 70.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Champion Strength", "de": "Champion-Stärke", "bereich": "Organisation", "typ": "Zustand", "start": 60.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Champion Departure", "de": "Champion geht / Sponsorwechsel", "bereich": "Organisation", "typ": "Ereignis", "start": 0.0, "kapitel": 3, "entscheidungsform": null}, {"name": "Anchoring", "de": "Verankern (Nachfolge, Prozesse, Anreize)", "bereich": "Organisation", "typ": "Hebel", "start": 0.0, "kapitel": 3, "entscheidungsform": "Mehrfachwahl: Nachfolge regeln / CE-Kriterien in Entwicklungs-Gates / Ziele und Bonus koppeln"}, {"name": "Economic Situation", "de": "Wirtschaftslage", "bereich": "Wirtschaft", "typ": "Extern", "start": 60.0, "kapitel": 1, "entscheidungsform": null}, {"name": "Low-cost Competition", "de": "Billigkonkurrenz", "bereich": "Wirtschaft", "typ": "Extern", "start": 30.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Seed Funding", "de": "Anschubfinanzierung (CO2-Fonds)", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 2, "entscheidungsform": "Optionen: kein eigener Topf / interner Fonds mit Frist / Mehrkosten zentral übernehmen"}, {"name": "Spare Parts & Service Business", "de": "Ersatzteil- & Servicegeschäft", "bereich": "Wirtschaft", "typ": "Indikator", "start": 50.0, "kapitel": 2, "entscheidungsform": null}, {"name": "Sales & Service Partner Involvement", "de": "Vertriebs- & Servicepartner einbinden", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 4, "entscheidungsform": "Optionen: einbinden / bewusst ausschliessen"}, {"name": "Upgrade in the Field", "de": "Upgrade im Feld", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 6, "entscheidungsform": "Ja / Nein"}, {"name": "Refurbished Positioning", "de": "Positionierung Refurbished", "bereich": "Wirtschaft", "typ": "Hebel", "start": 0.0, "kapitel": 4, "entscheidungsform": "Optionen: günstiger als neu / gleich teuer / Rebranding als Qualitätsprodukt"}, {"name": "Second-hand Stigma", "de": "Occasion-Stigma", "bereich": "Wirtschaft", "typ": "Indikator", "start": 60.0, "kapitel": 4, "entscheidungsform": null}, {"name": "Resilience", "de": "Resilienz (Material & Ersatzteile)", "bereich": "Wirtschaft", "typ": "Indikator", "start": 40.0, "kapitel": 2, "entscheidungsform": null}], "beziehungen": [{"id": "R001", "von": "Price", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 1}, {"id": "R002", "von": "Costs", "nach": "Cashflow", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R003", "von": "Marketing", "nach": "Purchase Decision", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R004", "von": "Sales", "nach": "Production Volume", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R007", "von": "Revenue", "nach": "Cashflow", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R009", "von": "Cashflow", "nach": "Investment in Circularity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R010", "von": "Investment in Circularity", "nach": "Modularity of the Product", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 6}, {"id": "R011", "von": "Modularity of the Product", "nach": "Service Quality", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R012", "von": "Modularity of the Product", "nach": "Circularity Compatibility of the Components", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R013", "von": "Production Volume", "nach": "Logistics Costs", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 1}, {"id": "R014", "von": "Production Volume", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R015", "von": "Service Quality", "nach": "Customer Trust", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R016", "von": "Sales", "nach": "Installed Base", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R017", "von": "Connectivity of the Product", "nach": "Product Condition Analysis", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R018", "von": "Installed Base", "nach": "Circular Market Volume", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 2}, {"id": "R019", "von": "Product Condition Analysis", "nach": "Triage of Circular Components", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R020", "von": "Triage of Circular Components", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R023", "von": "Reverse Logistic", "nach": "Recovered Material Inflow", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R024", "von": "Productivity", "nach": "Costs", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R025", "von": "Meaningfulness of Work", "nach": "Employee Satisfaction", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R026", "von": "Job Certainty", "nach": "Employee Satisfaction", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R028", "von": "Employee Satisfaction", "nach": "Labor Turnover Rate", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R029", "von": "Employee Satisfaction", "nach": "Productivity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R030", "von": "Employee Satisfaction", "nach": "Employer Brand", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 3}, {"id": "R031", "von": "Labor Turnover Rate", "nach": "Employer Brand", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R032", "von": "Material Circularity Index %", "nach": "CO2", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R033", "von": "Material Circularity Index %", "nach": "Water and Energy", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R034", "von": "Circular Product Design", "nach": "Material Circularity Index %", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 6}, {"id": "R035", "von": "Product Lifetime", "nach": "CO2", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 2}, {"id": "R036", "von": "Product Lifetime", "nach": "Water and Energy", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 2}, {"id": "R037", "von": "Recovered Material Inflow", "nach": "CO2", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R038", "von": "Recovered Material Inflow", "nach": "Water and Energy", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R039", "von": "Modularity of the Product", "nach": "Recovered Material Inflow", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 6}, {"id": "R040", "von": "Material Outflow", "nach": "CO2", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R041", "von": "Material Outflow", "nach": "Water and Energy", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R042", "von": "Customer Trust", "nach": "Purchase Decision", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R043", "von": "Logistics Costs", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R044", "von": "Circular Market Volume", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R045", "von": "Investment in Circularity", "nach": "Connectivity of the Product", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 5}, {"id": "R046", "von": "Circularity Compatibility of the Components", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 6}, {"id": "R047", "von": "Recovered Material Inflow", "nach": "Material Circularity Index %", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R048", "von": "Circular Product Design", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 6}, {"id": "R049", "von": "Modularity of the Product", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "lang", "kapitel": 6}, {"id": "R050", "von": "Production Volume", "nach": "Material Outflow", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R051", "von": "Material Circularity Index %", "nach": "Material Outflow", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R052", "von": "Service Quality", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 4}, {"id": "R053", "von": "Circularity Compatibility of the Components", "nach": "Material Circularity Index %", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R054", "von": "Employer Brand", "nach": "Customer Trust", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 3}, {"id": "R055", "von": "B1 Component Circulation", "nach": "C Combined M&C Flows", "pol": 1, "art": "Voraussetzung", "staerke": null, "verzoegerung": null, "kapitel": 7}, {"id": "R056", "von": "B2 Machine Circulation", "nach": "C Combined M&C Flows", "pol": 1, "art": "Voraussetzung", "staerke": null, "verzoegerung": null, "kapitel": 7}, {"id": "R057", "von": "C Combined M&C Flows", "nach": "D Pay-per-use", "pol": 1, "art": "Voraussetzung", "staerke": null, "verzoegerung": null, "kapitel": 7}, {"id": "R058", "von": "B1 Component Circulation", "nach": "Scouting", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R059", "von": "B1 Component Circulation", "nach": "Refurbishment", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R060", "von": "B1 Component Circulation", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R061", "von": "B2 Machine Circulation", "nach": "Scouting", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R062", "von": "B2 Machine Circulation", "nach": "Refurbishment", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R063", "von": "B2 Machine Circulation", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R064", "von": "A Machine Repair", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R065", "von": "C Combined M&C Flows", "nach": "Coordination of M&C Flows", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 7}, {"id": "R066", "von": "B1 Component Circulation", "nach": "Supplier Collaboration", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R067", "von": "B2 Machine Circulation", "nach": "Supplier Collaboration", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 5}, {"id": "R068", "von": "D Pay-per-use", "nach": "Customer Collaboration", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 7}, {"id": "R069", "von": "Scouting", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R070", "von": "Refurbishment", "nach": "Recovered Material Inflow", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R071", "von": "Refurbishment", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R072", "von": "Refurbishment", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 2}, {"id": "R073", "von": "Coordination of M&C Flows", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 7}, {"id": "R074", "von": "Customer Collaboration", "nach": "Product Condition Analysis", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R075", "von": "Customer Collaboration", "nach": "Customer Trust", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R076", "von": "Supplier Collaboration", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R077", "von": "D Pay-per-use", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 7}, {"id": "R078", "von": "D Pay-per-use", "nach": "Installed Base", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 7}, {"id": "R079", "von": "Investment in Circularity", "nach": "Cashflow", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R080", "von": "Price", "nach": "Purchase Decision", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R081", "von": "Purchase Decision", "nach": "Sales", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R082", "von": "Sales", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 1}, {"id": "R083", "von": "Modularity of the Product", "nach": "Development Effort", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 6}, {"id": "R084", "von": "Circular Product Design", "nach": "Development Effort", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 6}, {"id": "R085", "von": "Development Effort", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 6}, {"id": "R086", "von": "Product Lifetime", "nach": "Purchase Decision", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 2}, {"id": "R087", "von": "Circular Market Volume", "nach": "Purchase Decision", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R088", "von": "Water and Energy", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "keine", "kapitel": 1}, {"id": "R089", "von": "Recovered Material Inflow", "nach": "Costs", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R090", "von": "Recycling", "nach": "Material Circularity Index %", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R091", "von": "Recycling", "nach": "Recovered Material Inflow", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R092", "von": "Recycling", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "keine", "kapitel": 2}, {"id": "R093", "von": "Refurbishment", "nach": "Circular Market Volume", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R094", "von": "Customer Acceptance of Circular Offers", "nach": "Circular Market Volume", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 4}, {"id": "R095", "von": "Customer Trust", "nach": "Customer Acceptance of Circular Offers", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R096", "von": "Marketing", "nach": "Customer Acceptance of Circular Offers", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R097", "von": "Preference for New Products", "nach": "Customer Acceptance of Circular Offers", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 4}, {"id": "R098", "von": "Customer Sustainability Affinity", "nach": "Customer Acceptance of Circular Offers", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R099", "von": "Installed Base", "nach": "Return Volume", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "lang", "kapitel": 5}, {"id": "R101", "von": "Return Volume", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R102", "von": "Return Volume", "nach": "Logistics Costs", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 5}, {"id": "R103", "von": "Triage of Circular Components", "nach": "Return Quality", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R104", "von": "Return Quality", "nach": "Refurbishment", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R105", "von": "Return Quality", "nach": "Costs", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 5}, {"id": "R106", "von": "Supply Chain Shock", "nach": "Return Quality", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 5}, {"id": "R107", "von": "Strategic CE Focus", "nach": "Investment in Circularity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R108", "von": "Management Support", "nach": "Investment in Circularity", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R109", "von": "Cashflow", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 1}, {"id": "R110", "von": "Regulatory Pressure", "nach": "Customer Sustainability Affinity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 1}, {"id": "R111", "von": "Regulatory Pressure", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 1}, {"id": "R112", "von": "KPI System", "nach": "Measurability", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 8}, {"id": "R113", "von": "Measurability", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 8}, {"id": "R114", "von": "Material Circularity Index %", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "mittel", "kapitel": 1}, {"id": "R115", "von": "Cross-functional Team", "nach": "Transformation Capability", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R116", "von": "Cross-functional Team", "nach": "Costs", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "keine", "kapitel": 3}, {"id": "R117", "von": "Partner Integration", "nach": "Transformation Capability", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R118", "von": "Partner Integration", "nach": "Supplier Collaboration", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R119", "von": "Management Support", "nach": "Buy-in", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R120", "von": "Employee Satisfaction", "nach": "Buy-in", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R121", "von": "Buy-in", "nach": "Transformation Capability", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R122", "von": "Labor Turnover Rate", "nach": "Transformation Capability", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R123", "von": "Transformation Capability", "nach": "Refurbishment", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R124", "von": "Transformation Capability", "nach": "Reverse Logistic", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R125", "von": "B1 Component Circulation", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 2}, {"id": "R126", "von": "B2 Machine Circulation", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 5}, {"id": "R127", "von": "Coordination of M&C Flows", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 7}, {"id": "R128", "von": "Scaling Investment", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 7}, {"id": "R129", "von": "Complexity", "nach": "Transformation Capability", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R130", "von": "Complexity", "nach": "Employee Satisfaction", "pol": -1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R131", "von": "Scaling Investment", "nach": "Circular Market Volume", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 7}, {"id": "R132", "von": "Scaling Investment", "nach": "Cashflow", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 7}, {"id": "R133", "von": "Circular Market Volume", "nach": "Real Cases", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 7}, {"id": "R134", "von": "Customer Collaboration", "nach": "Real Cases", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 7}, {"id": "R135", "von": "Real Cases", "nach": "Buy-in", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 7}, {"id": "R136", "von": "Real Cases", "nach": "Customer Acceptance of Circular Offers", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 7}, {"id": "R137", "von": "Material Circularity Index %", "nach": "Meaningfulness of Work", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 3}, {"id": "R138", "von": "CO2", "nach": "Customer Trust", "pol": -1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 1}, {"id": "R139", "von": "CO2", "nach": "Employer Brand", "pol": -1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 3}, {"id": "R140", "von": "Circular Market Volume", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R141", "von": "Customer Trust", "nach": "Customer Collaboration", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R142", "von": "Transformation Capability", "nach": "Measurability", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 8}, {"id": "R143", "von": "Connectivity of the Product", "nach": "Measurability", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 8}, {"id": "R144", "von": "Champion Strength", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R145", "von": "Champion Strength", "nach": "Transformation Capability", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R146", "von": "Management Support", "nach": "Champion Strength", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R147", "von": "Champion Departure", "nach": "Champion Strength", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 3}, {"id": "R148", "von": "Anchoring", "nach": "Champion Strength", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R149", "von": "Anchoring", "nach": "Transformation Capability", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "lang", "kapitel": 3}, {"id": "R150", "von": "Economic Situation", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R151", "von": "Economic Situation", "nach": "Purchase Decision", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 1}, {"id": "R152", "von": "Economic Situation", "nach": "Refurbishment", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R153", "von": "Economic Situation", "nach": "Job Certainty", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R154", "von": "Refurbishment", "nach": "Job Certainty", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "kurz", "kapitel": 3}, {"id": "R155", "von": "Low-cost Competition", "nach": "Purchase Decision", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 4}, {"id": "R156", "von": "Seed Funding", "nach": "Investment in Circularity", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R157", "von": "Seed Funding", "nach": "Cashflow", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "keine", "kapitel": 2}, {"id": "R158", "von": "Refurbishment", "nach": "Spare Parts & Service Business", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R159", "von": "Product Lifetime", "nach": "Spare Parts & Service Business", "pol": -1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 2}, {"id": "R160", "von": "Spare Parts & Service Business", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "keine", "kapitel": 2}, {"id": "R161", "von": "Sales & Service Partner Involvement", "nach": "Customer Acceptance of Circular Offers", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R162", "von": "Sales & Service Partner Involvement", "nach": "Return Volume", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 5}, {"id": "R163", "von": "Sales & Service Partner Involvement", "nach": "Complexity", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 4}, {"id": "R164", "von": "Modularity of the Product", "nach": "Upgrade in the Field", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "lang", "kapitel": 6}, {"id": "R165", "von": "Upgrade in the Field", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 6}, {"id": "R166", "von": "Upgrade in the Field", "nach": "Product Lifetime", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R167", "von": "Upgrade in the Field", "nach": "Customer Trust", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R168", "von": "Upgrade in the Field", "nach": "Purchase Decision", "pol": -1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 6}, {"id": "R169", "von": "Refurbished Positioning", "nach": "Second-hand Stigma", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "mittel", "kapitel": 4}, {"id": "R170", "von": "Refurbished Positioning", "nach": "Revenue", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 4}, {"id": "R171", "von": "Second-hand Stigma", "nach": "Customer Acceptance of Circular Offers", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 4}, {"id": "R172", "von": "Refurbishment", "nach": "Resilience", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R173", "von": "B1 Component Circulation", "nach": "Resilience", "pol": 1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 2}, {"id": "R174", "von": "Return Volume", "nach": "Resilience", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 5}, {"id": "R175", "von": "Supplier Collaboration", "nach": "Resilience", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 3}, {"id": "R176", "von": "Supply Chain Shock", "nach": "Resilience", "pol": -1, "art": "Kausal", "staerke": "stark", "verzoegerung": "kurz", "kapitel": 5}, {"id": "R177", "von": "Resilience", "nach": "Customer Trust", "pol": 1, "art": "Kausal", "staerke": "mittel", "verzoegerung": "mittel", "kapitel": 2}, {"id": "R178", "von": "Resilience", "nach": "Management Support", "pol": 1, "art": "Kausal", "staerke": "schwach", "verzoegerung": "lang", "kapitel": 2}], "kapitel": [{"nr": 1, "titel": "Die Vision", "leitfrage": "Was priorisieren wir?"}, {"nr": 2, "titel": "Die erste Ernüchterung", "leitfrage": "Recycling, Repair oder Refurbishment?"}, {"nr": 3, "titel": "Die Organisationskrise", "leitfrage": "Wer trägt die Transformation?"}, {"nr": 4, "titel": "Der Kundenschock", "leitfrage": "Wie reagiert der Markt?"}, {"nr": 5, "titel": "Der Supply-Chain-Schock", "leitfrage": "Woher kommen die Rückläufe?"}, {"nr": 6, "titel": "Die Produkttransformation", "leitfrage": "Was muss im Design anders werden?"}, {"nr": 7, "titel": "Die Skalierungsfrage", "leitfrage": "Wie wird aus dem Pilot ein Geschäft?"}, {"nr": 8, "titel": "Die Reifephase", "leitfrage": "Wirkt die Transformation?"}], "karten": [{"name": "Zölle im Exportmarkt, Ware blockiert", "variable": "Economic Situation", "richtung": -1, "text": "CEO verlangt Fokus, Innovation und Pay-per-use-Pilot werden gestoppt; Refurbishment hält die Belegschaft ausgelastet."}, {"name": "Billigkonkurrenz aus Asien", "variable": "Low-cost Competition", "richtung": 1, "text": "Preisdruck auf Neumaschinen; Upgrade und Refurbishment werden zum Verteidigungsmittel."}, {"name": "Auftragseinbruch, Entlassungen", "variable": "Economic Situation", "richtung": -1, "text": "Priorität sinkt auf «mindestens schwarze Null», Budgets für Daten und Assurance werden gestrichen."}, {"name": "Investoren fordern ESG", "variable": "Management Support", "richtung": 1, "text": "Strategie und Reporting entstehen innert Monaten; lässt der Druck nach, kühlt das Thema ab."}, {"name": "Grosskunde verlangt Reporting im Tender", "variable": "Customer Sustainability Affinity", "richtung": 1, "text": "Ohne Nachweis kein Zugang zur Ausschreibung."}, {"name": "Regulierungs-Vorfall", "variable": "Regulatory Pressure", "richtung": 1, "text": "Eine neue Vorschrift hält die Lieferung an der Grenze auf, die Auslieferung stockt."}, {"name": "Lieferant kündigt Bauteil ab", "variable": "Resilience", "richtung": -1, "text": "Ohne eigene Kreislaufteile steht das Produkt still; ein Pool aus Rückläufen und Refurbishment überbrückt."}, {"name": "Kunde lehnt technische Lösung ab", "variable": "Customer Trust", "richtung": -1, "text": "Innert einer Woche ist eine Lösung nötig, sonst scheitert das Projekt."}, {"name": "Rücklauf als Schüttgut", "variable": "Supply Chain Shock", "richtung": 1, "text": "Verbeulte Geräte, festsitzende Schrauben: weniger wiederverwendbare Teile."}, {"name": "Champion geht", "variable": "Champion Departure", "richtung": 1, "text": "Die Verbindung zur Geschäftsleitung bricht ab, das Projekt rutscht ins Operative."}, {"name": "Reorganisation, Sponsor wechselt", "variable": "Champion Departure", "richtung": 1, "text": "Neue Vorgesetzte mit weniger Affinität, die Priorität sinkt still."}, {"name": "Übergabe ohne Wissenstransfer", "variable": "Champion Departure", "richtung": 1, "text": "Nachfolger kennen die Ziele nicht; Prozesse waren nie dokumentiert."}]};
+const P = CIRCULUS_PARAMETER, C = Circulus, { strategien, szenarien } = CIRCULUS_STRATEGIEN;
+const COL = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)", "var(--s5)"];
+const Q = P.schritteProRunde, JAHRE = P.runden;
+const de = Object.fromEntries(MODELL.variablen.map((v) => [v.name, v.de]));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// alle Läufe
+const R = {};
+for (const sz of szenarien) { R[sz.key] = {}; for (const st of strategien) R[sz.key][st.key] = C.simuliere(MODELL, P, st, sz); }
+const y = (s, name, jahr) => C.wert(s, name, Math.round(jahr * Q));
+let szen = "ruhig";
+
+document.getElementById("meta").textContent =
+  `Modell vom ${MODELL.stand} · ${MODELL.variablen.length} Variablen · ${MODELL.beziehungen.length} Beziehungen · Parameter Version ${P.version}`;
+document.getElementById("ver").textContent = P.version;
+document.getElementById("legend").innerHTML = strategien.map((s, i) => `<span><i style="background:${COL[i]}"></i>${esc(s.name)}</span>`).join("");
+document.getElementById("strat").innerHTML = strategien.map((s, i) => `<div><b><i style="background:${COL[i]}"></i>${esc(s.name)}</b>${esc(s.beschreibung)}</div>`).join("");
+
+const segEl = document.getElementById("szen");
+segEl.innerHTML = szenarien.map((s) => `<button data-k="${s.key}" title="${esc(s.beschreibung)}">${esc(s.name)}</button>`).join("");
+segEl.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { szen = b.dataset.k; render(); } });
+
+// ---------- Liniendiagramm ----------
+function chart(el, name, titel, hint, nurStrategie) {
+  const W = 340, H = 170, L = 30, Rr = 8, T = 8, B = 22;
+  const xs = (t) => L + (t / (JAHRE * Q)) * (W - L - Rr), ys = (v) => T + (1 - v / 100) * (H - T - B);
+  const reihen = strategien.map((st, i) => ({ st, i, s: R[szen][st.key] })).filter((r) => !nurStrategie || r.st.key === nurStrategie);
+  let g = "";
+  for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${L}" x2="${W - Rr}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${ys(v) + 3.5}" text-anchor="end">${v}</text>`;
+  for (let j = 0; j <= JAHRE; j += 2) g += `<text x="${xs(j * Q)}" y="${H - 6}" text-anchor="middle">${j === JAHRE ? "Jahr " + j : j}</text>`;
+  const start = MODELL.variablen.find((v) => v.name === name).start;
+  g += `<line x1="${L}" x2="${W - Rr}" y1="${ys(start)}" y2="${ys(start)}" stroke="var(--muted)" stroke-dasharray="2 3" opacity=".6"/>`;
+  for (const r of reihen) {
+    const d = r.s.verlauf.map((row, t) => `${t ? "L" : "M"}${xs(t).toFixed(1)},${ys(row[r.s.idx[name]]).toFixed(1)}`).join("");
+    g += `<path d="${d}" fill="none" stroke="${COL[r.i]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  g += `<line class="cross" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>`;
+  g += `<rect x="${L}" y="0" width="${W - L - Rr}" height="${H - B}" fill="transparent" class="hit"/>`;
+  el.innerHTML = `<div class="card">${titel ? `<h3>${esc(titel)}</h3>` : ""}<p class="hint">${esc(hint || "")}</p>
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(titel || name)}">${g}</svg><div class="tip"></div></div>`;
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), cross = svg.querySelector(".cross");
+  const move = (ev) => {
+    const pt = svg.getBoundingClientRect(), sx = (ev.clientX - pt.left) * (W / pt.width);
+    const t = Math.max(0, Math.min(JAHRE * Q, Math.round(((sx - L) / (W - L - Rr)) * JAHRE * Q)));
+    cross.setAttribute("x1", xs(t)); cross.setAttribute("x2", xs(t)); cross.setAttribute("visibility", "visible");
+    const rows = reihen.map((r) => [r, r.s.verlauf[t][r.s.idx[name]]]).sort((a, b) => b[1] - a[1]);
+    tip.innerHTML = `<div style="opacity:.75">Jahr ${(t / Q).toFixed(2).replace(/\.?0+$/, "")}</div>` +
+      rows.map(([r, v]) => `<div><i style="background:${COL[r.i]}"></i>${esc(r.st.name)}: <b>${v.toFixed(1)}</b></div>`).join("");
+    tip.style.display = "block";
+    const card = el.querySelector(".card").getBoundingClientRect();
+    let left = ev.clientX - card.left + 14; if (left + tip.offsetWidth > card.width) left = ev.clientX - card.left - tip.offsetWidth - 14;
+    tip.style.left = left + "px"; tip.style.top = ev.clientY - card.top - 10 + "px";
+  };
+  svg.addEventListener("pointermove", move);
+  svg.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+}
+
+function grid(id, liste) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  for (const [name, titel, hint] of liste) { const d = document.createElement("div"); host.appendChild(d); chart(d, name, titel, hint); }
+}
+
+// ---------- Prüfungen ----------
+const f1 = (x) => x.toFixed(1);
+function checks() {
+  const ru = R.ruhig, kr = R.krise, out = [];
+  const add = (titel, erwartung, ok, messung) => out.push({ titel, erwartung, ok, messung });
+  let maxAbw = 0;
+  for (const row of ru.abwarten.verlauf) for (let i = 0; i < row.length; i++) maxAbw = Math.max(maxAbw, Math.abs(row[i] - ru.abwarten.start[i]));
+  add("Gleichgewicht", "Ohne Entscheidungen bewegt sich nichts.", maxAbw < 0.5, `grösste Abweichung ${f1(maxAbw)}`);
+  const cfMin = Math.min(...[1, 1.5, 2, 2.5, 3].map((j) => y(ru.voll, "Cashflow", j)));
+  add("Investitionsbremse", "Volle Transformation drückt in den ersten Jahren den Cashflow.", cfMin < 48, `Minimum Jahr 1–3: ${f1(cfMin)} (Start 50)`);
+  const sp = y(ru.refurb, "Spare Parts & Service Business", 10);
+  add("Ersatzteil-Konflikt", "Refurbishment senkt das Ersatzteil- und Servicegeschäft.", sp < 47, `Jahr 10: ${f1(sp)} (Start 50)`);
+  const pdA = y(ru.abwarten, "Purchase Decision", 10), pdR = y(ru.refurb, "Purchase Decision", 10);
+  add("Kannibalisierung", "Zirkuläre Angebote senken die Kaufentscheidung für Neuprodukte.", pdR < pdA - 2, `Jahr 10: ${f1(pdR)} statt ${f1(pdA)}`);
+  const co2 = (k) => y(ru.abwarten, "CO2", 10) - y(ru[k], "CO2", 10);
+  add("Recycling ist nicht der stärkste Hebel", "Refurbishment senkt CO2 stärker als Recycling allein.", co2("refurb") > co2("recycling"),
+      `CO2-Senkung Jahr 10: Recycling ${f1(co2("recycling"))}, Refurbishment ${f1(co2("refurb"))}`);
+  const tcO = y(ru.organisation, "Transformation Capability", 6), tcR = y(ru.refurb, "Transformation Capability", 6);
+  const rfO = y(ru.organisation, "Refurbishment", 8), rfR = y(ru.refurb, "Refurbishment", 8);
+  add("Ohne Organisation kein Refurbishment", "«Organisation zuerst» erreicht trotz kleinerem Budget mehr Refurbishment als «Refurbishment schnell».",
+      rfO > rfR, `Refurbishment Jahr 8: ${f1(rfO)} gegen ${f1(rfR)}; Transformationsfähigkeit Jahr 6: ${f1(tcO)} gegen ${f1(tcR)}`);
+  const msK = y(kr.voll, "Management Support", 5), msR = y(ru.voll, "Management Support", 5);
+  const rbK = y(kr.voll, "Refurbishment", 5), rbR = y(ru.voll, "Refurbishment", 5);
+  add("Die Krise kippt die Prioritäten", "Im Auftragseinbruch sinkt der Management Support, Refurbishment puffert (steigt).",
+      msK < msR - 2 && rbK > rbR, `Jahr 5 Krise gegen ruhig: Support ${f1(msK)} / ${f1(msR)}, Refurbishment ${f1(rbK)} / ${f1(rbR)}`);
+  const reK = y(kr.refurb, "Resilience", 6.75), reA = y(kr.abwarten, "Resilience", 6.75);
+  add("Resilienz zahlt sich aus", "Wenn ein Lieferant ein Bauteil abkündigt, ist die Firma mit Kreislaufteilen besser versorgt.",
+      reK > reA + 5, `Resilienz Jahr 6¾: ${f1(reK)} gegen ${f1(reA)} (Abwarten)`);
+  const cfV = y(ru.voll, "Cashflow", 10), cfA = y(ru.abwarten, "Cashflow", 10);
+  add("Am Ende muss es sich lohnen", "Die volle Transformation trägt sich nach zehn Jahren mindestens so gut wie Abwarten.",
+      cfV >= cfA, `Cashflow Jahr 10: ${f1(cfV)} gegen ${f1(cfA)}`);
+  return out;
+}
+
+function renderChecks() {
+  const c = checks();
+  document.getElementById("checks").innerHTML = `<tr><th>AHA-Erlebnis</th><th>Erwartung</th><th>Messung</th><th>Ergebnis</th></tr>` +
+    c.map((x) => `<tr><td><b>${esc(x.titel)}</b></td><td>${esc(x.erwartung)}</td><td class="num">${esc(x.messung)}</td>
+      <td>${x.ok ? '<span class="badge ok">✓ erfüllt</span>' : '<span class="badge bad">✗ nicht erfüllt</span>'}</td></tr>`).join("");
+}
+
+function renderNotes() {
+  const notes = [];
+  for (const sz of szenarien) for (const st of strategien) {
+    const s = R[sz.key][st.key];
+    for (const l of s.log.filter((l) => l.typ === "abgelehnt")) notes.push(`${st.name} (${sz.name}), Jahr ${l.runde}: ${de[l.hebel]} nicht möglich – ${l.grund}.`);
+  }
+  const sat = {};
+  for (const sz of szenarien) for (const st of strategien) {
+    const s = R[sz.key][st.key];
+    for (const v of s.vars) {
+      if (v.typ === "Hebel" || v.typ === "Ereignis" || v.typ === "Extern") continue;
+      const vals = s.verlauf.map((r) => r[v.i]);
+      if (Math.max(...vals) > 98 || (v.start >= 2 && Math.min(...vals) < 2)) (sat[v.name] ||= new Set()).add(st.name);
+    }
+  }
+  for (const [n, set] of Object.entries(sat)) notes.push(`${de[n]} läuft an den Rand der Skala (${[...set].join(", ")}). Gewichte prüfen.`);
+  const still = MODELL.variablen.filter((v) => !["Hebel", "Ereignis", "Extern"].includes(v.typ) &&
+    strategien.every((st) => szenarien.every((sz) => { const s = R[sz.key][st.key]; return s.verlauf.every((r) => Math.abs(r[s.idx[v.name]] - v.start) < 1); })));
+  if (still.length) notes.push(`Bewegt sich in keiner Strategie: ${still.map((v) => de[v.name]).join(", ")}.`);
+  document.getElementById("notes").innerHTML = notes.length ? notes.map((n) => `<li>${esc(n)}</li>`).join("") : "<li>Keine.</li>";
+}
+
+const varsel = document.getElementById("varsel"), stratsel = document.getElementById("stratsel");
+varsel.innerHTML = [...MODELL.variablen].sort((a, b) => a.de.localeCompare(b.de, "de")).map((v) => `<option value="${esc(v.name)}">${esc(v.de)}</option>`).join("");
+varsel.value = "Refurbishment";
+stratsel.innerHTML = strategien.map((s) => `<option value="${s.key}">Treiber bei: ${esc(s.name)}</option>`).join("");
+stratsel.value = "voll";
+varsel.onchange = stratsel.onchange = renderVar;
+function renderVar() {
+  const n = varsel.value, v = MODELL.variablen.find((x) => x.name === n);
+  chart(document.getElementById("varchart"), n, v.de, `${v.typ} · ab Kapitel ${v.kapitel} · Start ${v.start}`);
+  const b = C.beitraege(R[szen][stratsel.value], n).filter((x) => Math.abs(x.beitrag) >= 0.05);
+  document.getElementById("treiber").innerHTML = `<tr><th>Ursache</th><th>Beitrag Jahr 10</th></tr>` +
+    (b.length ? b.map((x) => `<tr><td>${esc(de[x.von])}</td><td class="num">${x.beitrag > 0 ? "+" : ""}${x.beitrag.toFixed(1)}</td></tr>`).join("")
+              : `<tr><td colspan="2" style="color:var(--muted)">Keine aktive Wirkung.</td></tr>`);
+}
+
+function render() {
+  segEl.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === szen));
+  grid("ergebnis", P.ergebnis.map((e) => [e.name, e.label, e.besser < 0 ? "tiefer ist besser" : "höher ist besser"]));
+  grid("weitere", [
+    ["Revenue", "Umsatz"], ["Costs", "Kosten"], ["Spare Parts & Service Business", "Ersatzteil- & Servicegeschäft"],
+    ["Purchase Decision", "Kaufentscheidung Neuprodukte"], ["Refurbishment", "Refurbishment"], ["Circular Market Volume", "Zirkuläres Marktvolumen"],
+    ["Management Support", "Management Support"], ["Transformation Capability", "Transformationsfähigkeit"], ["Buy-in", "Buy-in"],
+    ["Customer Trust", "Kundenvertrauen"], ["Material Circularity Index %", "Material Circularity Index"], ["Investment in Circularity", "Investition in Zirkularität (wirksam)"],
+  ].map(([n, t]) => [n, t, ""]));
+  renderVar();
+}
+renderChecks(); renderNotes(); render();
+</script>
+</body>
+</html>
