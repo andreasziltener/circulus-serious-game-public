@@ -109,7 +109,7 @@ summary { cursor: pointer; color: var(--accent); font-size: 13px; }
 
   <h2>Rechenregeln (Version <span id="ver"></span>)</h2>
   <ul class="notes">
-    <li>Eine Runde ist ein halbes Jahr mit zwei Quartalen; 20 Runden ergeben 10 Jahre. In den Runden 1–8 öffnet sich je ein Kapitel; Hebel und Wirkungen gelten erst ab ihrem Kapitel.</li>
+    <li>Eine Runde ist ein halbes Jahr mit zwei Quartalen; 20 Runden ergeben 10 Jahre. Pro Runde öffnet sich ein Kapitel, Kapitel 6 und 7 gemeinsam in Runde 6, Kapitel 8 in Runde 7; Hebel und Wirkungen gelten erst ab ihrem Kapitel. Eine Voraussetzung (z. B. C vor D) gilt als erfüllt, sobald sie in derselben Runde entschieden ist.</li>
     <li>Zielwert einer Variablen = Startwert + Σ Gewicht × Polarität × (Wert der Ursache vor der Verzögerung − deren Startwert).</li>
     <li>Gewicht: schwach 0.1, mittel 0.2, stark 0.35. Ein Hebel auf «Ja» steht auf 80. Verzögerung in Quartalen: keine/kurz 1, mittel 3, lang 6.</li>
     <li>Indikatoren gehen pro Quartal halb, Zustände zu 15 % auf ihren Zielwert zu. Zum Rand der Skala hin werden Wirkungen weich gesättigt (tanh), Werte bleiben zwischen 0 und 100.</li>
@@ -137,9 +137,9 @@ summary { cursor: pointer; color: var(--accent); font-size: 13px; }
     version: "0.2",
     schritteProRunde: 2,            // Entscheid Team: 1 Runde = ½ Jahr = 2 Quartale
     runden: 20,                     // 20 Runden = 10 Jahre
-    // Storyline: ein Kapitel pro Runde, alle acht Kapitel in den ersten vier Jahren; danach volles System.
-    // So kann Pay-per-use (Kapitel 7, Amortisation ~5 Jahre) innerhalb der 10 Jahre aufgehen.
-    kapitelProRunde: [1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+    // Storyline: ein Kapitel pro Runde; Kapitel 6 und 7 öffnen gemeinsam in Runde 6 (Entscheid Team: C und D ab Runde 6),
+    // Kapitel 8 in Runde 7, danach volles System. So kann Pay-per-use (Amortisation ~5 Jahre) innerhalb der 10 Jahre aufgehen.
+    kapitelProRunde: [1, 2, 3, 4, 5, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
 
     // Wirkung pro Punkt Abweichung der Ursache vom Startwert
     gewicht: { schwach: 0.1, mittel: 0.2, stark: 0.35 },
@@ -292,7 +292,9 @@ summary { cursor: pointer; color: var(--accent); font-size: 13px; }
     const v = s.vars[s.idx[name]];
     if (!v || v.typ !== "Hebel") return { ok: false, grund: "kein Hebel" };
     if (v.kapitel > s.kapitel) return { ok: false, grund: `ab Kapitel ${v.kapitel}` };
-    const fehlt = v.voraus.filter((j) => wert(s, s.vars[j].name) < s.P.voraussetzungSchwelle).map((j) => s.vars[j].name);
+    // Voraussetzung erfüllt, wenn die Ursache den Schwellenwert hat oder (bei Hebeln) in dieser Runde schon so entschieden ist
+    const stand = (j) => Math.max(wert(s, s.vars[j].name), s.vars[j].typ === "Hebel" ? s.wahl[s.vars[j].name] ?? 0 : 0);
+    const fehlt = v.voraus.filter((j) => stand(j) < s.P.voraussetzungSchwelle).map((j) => s.vars[j].name);
     if (fehlt.length) return { ok: false, grund: "braucht zuerst: " + fehlt.join(", ") };
     return { ok: true };
   }
@@ -436,17 +438,17 @@ summary { cursor: pointer; color: var(--accent); font-size: 13px; }
     },
     {
       key: "voll", name: "Volle Transformation",
-      beschreibung: "Alle Hebel, sobald das Kapitel offen ist: Budget, Nachhaltigkeitsfonds, Organisation, Produktdesign, Pfade A → B → C → D, Skalierung (Runde 7–10), KPI-System.",
+      beschreibung: "Alle Hebel, sobald das Kapitel offen ist: Budget, Nachhaltigkeitsfonds, Organisation, Produktdesign, Pfade A → B → C → D, C und D ab Runde 6, Skalierung (Runde 6–9), KPI-System.",
       entscheide: {
         1: { "Investment in Circularity": 40, "Marketing": "als «grün» vermarkten" },
         2: { "Sustainability Fund": "hohe Abgabe", "Recycling": "Ja", "A Machine Repair": "Ja", "B1 Component Circulation": "Ja" },
         3: { "Cross-functional Team": "dezentrale Gruppe", "Partner Integration": "Ja", "Anchoring": ["Nachfolge regeln", "CE-Kriterien in Gates", "Ziele und Bonus koppeln"] },
         4: { "Sales & Service Partner Involvement": "einbinden", "Refurbished Positioning": "Qualitätsprodukt mit CO2-Vorteil (−10 %)" },
         5: { "B2 Machine Circulation": "Ja" },
-        6: { "Circular Product Design": "Gate im Entwicklungsprozess", "Upgrade in the Field": "Ja" },
-        7: { "C Combined M&C Flows": "Ja", "Scaling Investment": "stufenweise mit Frist", "Investment in Circularity": 20 },
-        8: { "D Pay-per-use": "Ja", "KPI System": "kombiniert" },
-        11: { "Scaling Investment": "nicht freigeben" },
+        6: { "Circular Product Design": "Gate im Entwicklungsprozess", "Upgrade in the Field": "Ja",
+             "C Combined M&C Flows": "Ja", "D Pay-per-use": "Ja", "Scaling Investment": "stufenweise mit Frist", "Investment in Circularity": 20 },
+        7: { "KPI System": "kombiniert" },
+        10: { "Scaling Investment": "nicht freigeben" },
       },
     },
   ];
