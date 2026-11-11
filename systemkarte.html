@@ -16,7 +16,7 @@
   --band-ink: #4A5A61;
   --plus: #3F4E57; --minus: #C23B1C; --prereq: #7650C9;
   --lever: #F7CF4A; --lever-edge: #A88200; --lever-ink: #1E1A0A;
-  --event-bg: #FBE4DC; --ext-bg: #E6ECEE;
+  --event-bg: #FBE4DC; --ext-bg: #E6ECEE; --result-bg: #D8F0E0; --result-edge: #1F7A3A;
   --accent: #0B7A88; --accent-soft: rgba(11,122,136,.16);
   --loop-r: #0B7A88; --loop-b: #B86E00;
   --font-ui: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
@@ -29,7 +29,7 @@
   --band-ink: #A5B4BA;
   --plus: #AEBBC1; --minus: #FF7B5E; --prereq: #B597FF;
   --lever: #E7C24A; --lever-edge: #8F7210; --lever-ink: #1E1A0A;
-  --event-bg: #3A2019; --ext-bg: #26323A;
+  --event-bg: #3A2019; --ext-bg: #26323A; --result-bg: #17392A; --result-edge: #6FCF8A;
   --accent: #3CC3D3; --accent-soft: rgba(60,195,211,.18);
   --loop-r: #3CC3D3; --loop-b: #F0A43A;
   color-scheme: dark;
@@ -40,7 +40,7 @@
   --band-ink: #A5B4BA;
   --plus: #AEBBC1; --minus: #FF7B5E; --prereq: #B597FF;
   --lever: #E7C24A; --lever-edge: #8F7210; --lever-ink: #1E1A0A;
-  --event-bg: #3A2019; --ext-bg: #26323A;
+  --event-bg: #3A2019; --ext-bg: #26323A; --result-bg: #17392A; --result-edge: #6FCF8A;
   --accent: #3CC3D3; --accent-soft: rgba(60,195,211,.18);
   --loop-r: #3CC3D3; --loop-b: #F0A43A;
   color-scheme: dark;
@@ -138,19 +138,17 @@ svg.focus .edge.hot { opacity: 1; }
 .plab.p { fill: var(--plus); } .plab.m { fill: var(--minus); } .plab.v { display: none; }
 .node { cursor: pointer; }
 .node rect.box { stroke-width: 1.1; }
-.node.t-ind rect.box { fill: var(--surface); stroke: var(--line-strong); }
-.node.t-stock rect.box { fill: var(--surface); stroke: var(--fg); stroke-width: 1.9; }
-.node.t-lever rect.box { fill: var(--lever); stroke: var(--lever-edge); stroke-width: 1.4; }
-.node.t-lever.cbm rect.box { stroke: var(--prereq); stroke-width: 2.4; }
-.node.t-event rect.box { fill: var(--event-bg); stroke: var(--minus); stroke-width: 1.5; }
-.node.t-ext rect.box { fill: var(--ext-bg); stroke: var(--muted); stroke-width: 1.4; }
+.node.c-ind rect.box { fill: var(--surface); stroke: var(--line-strong); }
+.node.c-dec rect.box { fill: var(--lever); stroke: var(--lever-edge); stroke-width: 1.4; }
+.node.c-event rect.box { fill: var(--event-bg); stroke: var(--minus); stroke-width: 1.5; }
+.node.c-res rect.box { fill: var(--result-bg); stroke: var(--result-edge); stroke-width: 2.2; }
 .node.s-new rect.box { stroke-dasharray: 5 3; }
 .node.s-gone rect.box { stroke: var(--minus); stroke-dasharray: 2 3; }
 .node.s-gone text { text-decoration: line-through; }
 .node text { font-family: var(--font-label); font-size: 12.5px; font-weight: 500; fill: var(--fg); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.node.t-lever text { fill: var(--lever-ink); }
+.node.c-dec text { fill: var(--lever-ink); }
 .node text.k { font-family: var(--font-mono); font-size: 9px; font-weight: 500; fill: var(--muted); text-anchor: end; }
-.node.t-lever text.k { fill: var(--lever-ink); opacity: .6; }
+.node.c-dec text.k { fill: var(--lever-ink); opacity: .6; }
 .node rect.halo { fill: none; stroke: var(--accent); stroke-width: 3.5; opacity: 0; }
 .node.fresh rect.halo { opacity: .55; }
 .node:hover rect.box { filter: brightness(.97); }
@@ -224,7 +222,9 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
   const side = document.getElementById("side");
   const byId = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
   const chapterOf = Object.fromEntries(DATA.chapters.map(c => [c.n, c]));
-  const TYPE_CLASS = { "Hebel": "t-lever", "Zustand": "t-stock", "Indikator": "t-ind", "Ereignis": "t-event", "Extern": "t-ext" };
+  // Vier Kategorien (Entscheid Team): Entscheidungen, Ereignisse, Indikatoren, Ergebnisgrössen
+  const ERGEBNIS = new Set(["Cashflow", "CO2", "Resilience"]);
+  const kategorie = n => ERGEBNIS.has(n.id) ? "res" : n.type === "Hebel" ? "dec" : (n.type === "Ereignis" || n.type === "Extern") ? "event" : "ind";
   const STATUS_NODE = { "Neu": "s-new", "Neu (Empirie)": "s-new s-emp", "Geändert": "s-chg", "Umbenannt": "s-chg", "Bestehend": "s-old", "Entfernen": "s-gone" };
   const isNew = st => typeof st === "string" && st.startsWith("Neu");
   const chipCls = st => st === "Neu (Empirie)" ? "st-emp" : "st-" + st;
@@ -243,8 +243,8 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
       capAll: "<b>Gesamtsystem</b> <span class=\"q\">· alle Kapitel der Storyline</span><div class=\"meta\">Wähle ein Kapitel, um das System Schritt für Schritt aufzubauen wie im BMI-Prototyp. Neue Elemente des Kapitels sind farbig umrandet. Die kleine Zahl oben rechts in jeder Variable ist ihr Kapitel.</div>",
       levers: "Hebel", event: "Ereignis", cbm: "CBM-Pfad", fresh: n => `${n} neue Variablen`,
       overview: "Übersicht", vars: "Variablen", rels: "Beziehungen", loops: "Kreisläufe", keyLoops: "Zentrale Kreisläufe",
-      incomplete: "In dieser Ansicht nicht vollständig vorhanden.", legend: "Legende",
-      lg: ["Hebel – Entscheidung der Spieler:innen", "CBM-Pfad (A, B1, B2, C, D) aus dem Manuskript", "Zustand – sammelt sich über die Zeit an", "Indikator – ergibt sich laufend", "Ereignis – vom Spiel ausgelöst", "Extern – Wirtschaftslage, Konkurrenz, Startprofil", "Gestrichelter Rand: neue Variable (Vorschlag)", "<b>+</b> gleichgerichtet: mehr Ursache → mehr Wirkung", "<b>−</b> entgegengesetzt: mehr Ursache → weniger Wirkung", "Gestrichelt: neue Beziehung (Vorschlag)", "Voraussetzung – schaltet einen CBM-Pfad frei"],
+      incomplete: "In dieser Ansicht nicht vollständig vorhanden.", legend: "Legende", kat: { dec: "Entscheidung", event: "Ereignis", ind: "Indikator", res: "Ergebnisgrösse" },
+      lg: ["Entscheidung – wählen die Spieler:innen (inkl. CBM-Pfade A, B1, B2, C, D)", "Ereignis – vom Spiel ausgelöst oder von aussen (Wirtschaftslage, Konkurrenz)", "Indikator – ergibt sich aus dem System", "Ergebnisgrösse – Marge (Cashflow), CO2, Resilienz", "Gestrichelter Rand: neue Variable (Vorschlag)", "<b>+</b> gleichgerichtet: mehr Ursache → mehr Wirkung", "<b>−</b> entgegengesetzt: mehr Ursache → weniger Wirkung", "Gestrichelt: neue Beziehung (Vorschlag)", "Voraussetzung – schaltet einen CBM-Pfad frei"],
       note1: "Ein Pfeil hat eine Polarität (+/−). Ob ein Kreislauf <b>verstärkend (R)</b> oder <b>ausgleichend (B)</b> ist, ergibt sich aus allen Pfeilen: Eine gerade Anzahl − ergibt R, eine ungerade B.",
       note2: "Ansicht <b>Original CLD v4</b> zeigt nur Elemente aus der ursprünglichen Excel, <b>Änderungen</b> zeigt Vorschläge aus dem ersten Entwurf türkis, Vorschläge aus den Interviews orange und zum Entfernen vorgeschlagene Elemente rot.",
       back: "← Übersicht", affects: "Wirkt auf", affected: "Wird beeinflusst von", noOut: "Keine Wirkung in dieser Ansicht.",
@@ -264,8 +264,8 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
       capAll: "<b>Whole system</b> <span class=\"q\">· all chapters of the storyline</span><div class=\"meta\">Pick a chapter to build up the system step by step, as in the BMI prototype. New elements of the chapter are outlined in colour. The small number at the top right of each variable is its chapter.</div>",
       levers: "Levers", event: "Event", cbm: "CBM path", fresh: n => `${n} new variables`,
       overview: "Overview", vars: "Variables", rels: "Relations", loops: "Loops", keyLoops: "Key loops",
-      incomplete: "Not complete in this view.", legend: "Legend",
-      lg: ["Lever – decision of the players", "CBM path (A, B1, B2, C, D) from the manuscript", "Stock – accumulates over time", "Indicator – results continuously", "Event – triggered by the game", "External – economy, competition, start profile", "Dashed border: new variable (proposal)", "<b>+</b> same direction: more cause → more effect", "<b>−</b> opposite direction: more cause → less effect", "Dashed: new relation (proposal)", "Prerequisite – unlocks a CBM path"],
+      incomplete: "Not complete in this view.", legend: "Legend", kat: { dec: "Decision", event: "Event", ind: "Indicator", res: "Outcome" },
+      lg: ["Decision – chosen by the players (incl. CBM paths A, B1, B2, C, D)", "Event – triggered by the game or from outside (economy, competition)", "Indicator – results from the system", "Outcome – margin (cash flow), CO2, resilience", "Dashed border: new variable (proposal)", "<b>+</b> same direction: more cause → more effect", "<b>−</b> opposite direction: more cause → less effect", "Dashed: new relation (proposal)", "Prerequisite – unlocks a CBM path"],
       note1: "Each arrow has a polarity (+/−). Whether a loop is <b>reinforcing (R)</b> or <b>balancing (B)</b> follows from all its arrows: an even number of − gives R, an odd number gives B.",
       note2: "The <b>Original CLD v4</b> view shows only elements from the original spreadsheet. <b>Changes</b> shows proposals from the first draft in teal, proposals from the interviews in orange and elements proposed for removal in red.",
       back: "← Overview", affects: "Affects", affected: "Affected by", noOut: "No effect in this view.",
@@ -376,9 +376,9 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
   });
 
   const nodeEls = DATA.nodes.map(n => {
-    const g = el("g", { class: `node ${TYPE_CLASS[n.type] || "t-ind"} ${STATUS_NODE[n.status] || ""}${/^(A|B1|B2|C|D) /.test(n.id) ? " cbm" : ""}`, transform: `translate(${n.x},${n.y})`, tabindex: "0", role: "button" }, gNodes);
-    el("rect", { class: "halo", x: -BW / 2 - 5, y: -BH / 2 - 5, width: BW + 10, height: BH + 10, rx: n.type === "Indikator" ? 26 : 7 }, g);
-    el("rect", { class: "box", x: -BW / 2, y: -BH / 2, width: BW, height: BH, rx: n.type === "Indikator" ? BH / 2 : n.type === "Extern" ? 10 : 3 }, g);
+    const g = el("g", { class: `node c-${kategorie(n)} ${STATUS_NODE[n.status] || ""}`, transform: `translate(${n.x},${n.y})`, tabindex: "0", role: "button" }, gNodes);
+    el("rect", { class: "halo", x: -BW / 2 - 5, y: -BH / 2 - 5, width: BW + 10, height: BH + 10, rx: 7 }, g);
+    el("rect", { class: "box", x: -BW / 2, y: -BH / 2, width: BW, height: BH, rx: 3 }, g);
     const tg = el("g", {}, g);
     const k = el("text", { class: "k", x: BW / 2 - 6, y: -BH / 2 + 8 }, g); k.textContent = n.chapter;
     g.addEventListener("click", ev => { if (dragMoved) return; select(n.id); ev.stopPropagation(); });
@@ -503,12 +503,10 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
   }
   const legendSVG = inner => `<svg width="46" height="22" viewBox="0 0 46 22" aria-hidden="true">${inner}</svg>`;
   const LEG = [
-    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--lever);stroke:var(--lever-edge)"/>`,
-    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--lever);stroke:var(--prereq);stroke-width:2.4"/>`,
-    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--surface);stroke:var(--fg);stroke-width:1.9"/>`,
-    `<rect x="3" y="3" width="40" height="16" rx="8" style="fill:var(--surface);stroke:var(--line-strong)"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--lever);stroke:var(--lever-edge);stroke-width:1.4"/>`,
     `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--event-bg);stroke:var(--minus);stroke-width:1.5"/>`,
-    `<rect x="3" y="3" width="40" height="16" rx="6" style="fill:var(--ext-bg);stroke:var(--muted);stroke-width:1.4"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--surface);stroke:var(--line-strong)"/>`,
+    `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--result-bg);stroke:var(--result-edge);stroke-width:2.2"/>`,
     `<rect x="3" y="3" width="40" height="16" rx="2" style="fill:var(--surface);stroke:var(--line-strong);stroke-dasharray:5 3"/>`,
     `<path d="M2 11 H38" style="stroke:var(--plus);stroke-width:1.5"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--plus)"/>`,
     `<path d="M2 11 H38" style="stroke:var(--minus);stroke-width:1.5"/><path d="M36 7 L43 11 L36 15z" style="fill:var(--minus)"/>`,
@@ -560,7 +558,7 @@ const DATA = {"generated":"2026-11-11","width":2000,"height":1566,"bands":[{"lab
       <button class="back" id="back">${t("back")}</button>
       <h2>${esc(label(n))}</h2>
       <div class="note">${esc(other)}</div>
-      <div class="chips"><span class="chip">${esc(en(n.area))}</span><span class="chip">${esc(en(n.type))}</span><span class="chip">${t("chap")} ${n.chapter}</span><span class="chip ${esc(chipCls(n.status))}">${esc(en(n.status))}</span></div>
+      <div class="chips"><span class="chip">${esc(en(n.area))}</span><span class="chip">${esc(t("kat")[kategorie(n)])}</span><span class="chip">${t("chap")} ${n.chapter}</span><span class="chip ${esc(chipCls(n.status))}">${esc(en(n.status))}</span></div>
       ${comment ? `<p class="note">${esc(comment)}</p>` : ""}
       ${n.evidence ? `<p class="ev">${t("evidence")}: ${esc(n.evidence)}</p>` : ""}
       <h3>${t("affects")} (${outs.length})</h3>
